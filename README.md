@@ -1,4 +1,4 @@
-# bool-bento
+# bento-bool
 A repo for efficiently calculating and storing the extensions of binary feature vectors with respect to a set of observed objects.
 
 `Calculating Partial Feature Vector Extension.ipynb` documents code for efficiently pre-calculating (and storing) the extension of every partial feature vector (Boolean formula) given a list of bitstrings representing an inventory of fully specified feature vectors (observed objects drawn from a binary feature space). Given such a pre-calculated mapping, a number of other calculations become much easier. E.g. 
