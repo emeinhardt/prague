@@ -3,3 +3,5 @@ __pycache_
 .DS_Store_
 *.py[cod]
 .nfs*
+*.dat
+*.npz
