@@ -1,0 +1,31 @@
+anterior
+approximant
+back
+consonantal
+constricted glottis
+continuant
+coronal
+delayed_release
+diphthong
+distributed
+dorsal
+front
+front-diphthong
+high
+labial
+labiodental
+lateral
+long
+low
+nasal
+round
+segment
+sonorant
+spread glottis
+stress
+strident
+syllabic
+tap
+tense
+trill
+voice

@@ -1,0 +1,23 @@
+syll
+cons
+son
+labial
+coronal
+dorsal
+voice
+cont
+del. rel.
+ant
+dist
+strid
+high
+low
+back
+front
+approx
+nas
+lat
+s.g.
+c.g.
+round
+ATR
