@@ -68,6 +68,19 @@ def tn(t_tensor, to_dtype=myint):
         return t_tensor.cpu().numpy().
 
 
+def get_backend(v):
+    '''
+    Given a numpy ndarray or a torch tensor,
+    returns either the module np or the module torch.
+    '''
+    if type(v) == np.ndarray:
+        return np
+    elif type(v) == torch.Tensor:
+        return torch
+    else:
+        raise Exception(f'v is neither an ndarray nor a pytorch tensor. Type: {type(v)}')
+
+
 ################################################################################
 # COMPOSABLE, LESS STATEFUL VERSIONS OF NUMPY FUNCTIONS
 ################################################################################
@@ -584,14 +597,162 @@ def make_agreeing_vector_pair(pred=None):
 # Comparison of partial feature vectors by generality/specificity
 ################################################################################
 
+def compare_generality_rank(u, v):
+    '''
+    Given two pfvs u, v, returns 
+        1 iff u > v
+        0 iff u == v
+        -1 iff u < v
+    where
+        u > v
+    iff u is more general (= has fewer specified features)
+    than v.
+    
+    (Works on ndarrays and torch tensors.)
+    '''
+    if type(u) == np.ndarray and type(v) == np.ndarray:
+        backend = np
+    elif type(u) == torch.Tensor and type(v) == torch.Tensor:
+        backend = torch
+    else:
+        raise Exception('u,v must both either be of type np.ndarray or torch.Tensor')
+    
+    u_key, v_key = backend.sum(backend.abs(u)), backend.sum(backend.abs(v))
+    if u_key == v_key:
+        return 0
+    else:
+        if u_key < v_key:
+            return 1
+        else:
+            return -1
 
+def incomparable_features(a,b):
+    '''
+    Feature values a and b are incomparable iff
+    a is -1 and b is +1 or vice versa.
+    '''
+    return (a == -1 & b == 1) | (a == 1 & b == -1)
+
+
+def incomparable(u,v):
+    '''
+    Indicates elementwise whether u,v are incomparable.
+
+    Agnostic between numpy and pytorch representations.
+    '''
+    u_backend = get_backend(u)
+    if u_backend == get_backend(v):
+        backend = u_backend
+    else:
+        raise Exception('u,v must have the same backend')
+    if backend is np:
+        return (np.equal(u, -1) & np.equal(v, 1)) | (np.equal(u, 1) & np.equal(v, -1))
+    else:
+        return (torch.eq(u, -1) & torch.eq(v, 1)) | (torch.eq(u, 1) & torch.eq(v, -1))
+
+
+def comp_spec_feature(a, b):
+    '''
+    At the level of a single feature value f
+         f ⊆ f, ∀f ∈ {-1,0,+1}
+        +1 ⊂ 0
+        -1 ⊂ 0
+        (-1 and +1 are incomparable)
+    
+    This function returns 
+         0    if a ⊆ b and b ⊆ a
+        +1    if a ⊂ b
+        -1    if b ⊂ a
+   (np.)NaN   if a and b are incomparable
+    '''
+    if a == b:
+        return 0
+    elif a == 0:
+        return 1
+    elif b == 0:
+        return -1
+    else:
+        return np.NaN
+
+comp_spec_feature_vec = np.vectorize(comp_spec_feature)
+
+
+def compare_spec(u,v):
+    '''
+    At the level of a single feature value f
+         f ⊆ f, ∀f ∈ {-1,0,+1}
+        +1 ⊂ 0
+        -1 ⊂ 0
+        (-1 and +1 are incomparable)
+    
+    This function returns 
+         0    if u ⊆ v and v ⊆ u
+        +1    if u ⊂ v
+        -1    if v ⊂ u
+        NaN   if u and v are incomparable
+    *elementwise*
+
+    FIXME: Currently only works for numpy ndarrays.
+    '''
+    incomparability = incomparable(u,v)
+    if incomparability.any():
+        incomparable_indices = incomparability.nonzero()[0]
+        first_pass = comp_spec_feature_vec(put_(u, 
+                                                incomparable_indices,
+                                                -99),
+                                           put_(v, 
+                                                incomparable_indices,
+                                                -99)).astype(np.float16)
+        second_pass = put_(first_pass, incomparable_indices, np.NaN)
+        return second_pass
+#         raise Exception('u and v must be *completely* comparable')
+    return comp_spec_feature_vec(u,v)
+ 
+
+def compare_specification(u, v):
+    '''
+    Given two pfvs u, v, returns 
+        +1   iff ⟦v⟧ ⊂ ⟦u⟧
+         0   iff ⟦u⟧ == ⟦v⟧
+        -1   iff ⟦u⟧ ⊂ ⟦v⟧
+        NaN  iff ⟦u⟧ and ⟦v⟧ are incomparable
+    where
+        ⟦⸱⟧ 
+    is defined with respect to the set of *all 
+    logically possible* objects given the feature system.
+    
+    I.e. at the level of a single feature value f
+         f ⊆ f, ∀f ∈ {-1,0,+1}
+        +1 ⊂ 0
+        -1 ⊂ 0
+        (-1, +1 are incomparable)
+    FIXME: Currently only works for numpy ndarrays.
+    '''
+#     if type(u) == np.ndarray and type(v) == np.ndarray:
+#         backend = np
+#     elif type(u) == torch.Tensor and type(v) == torch.Tensor:
+#         backend = torch
+#     else:
+#         raise Exception('u,v must both either be of type np.ndarray or torch.Tensor')
+    if incomparable(u,v).any():
+        return np.NaN
+    
+    elementwise_comp = compare_spec(u,v)
+    if (elementwise_comp == 0).all():
+        return 0
+    elif ((elementwise_comp == 0) | (elementwise_comp == 1)).all():
+        return 1
+    elif ((elementwise_comp == 0) | (elementwise_comp == -1)).all():
+        return -1
+    else:
+        return np.NaN
 
 
 ################################################################################
 # Union
 ################################################################################
 
-
+ 
 
 
 
