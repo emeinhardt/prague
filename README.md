@@ -17,7 +17,7 @@ Because of the combinatorics involved, there's usually *many* partial feature ve
 The main algorithmic challenge here is figuring out how to make it as practical as possible to calculate items 1-3 above for any given feature system. This is not currently a solved problem, nor, to my knowledge something that anyone has attempted to seriously tackle - phonologists either have to do this by hand (using their implicit domain knowledge) or settle for heuristics. The goal here is to see how these problems are solvable exactly and with computational resources plausibly available to a researcher working with machine-readable phonological data, and to then produce Python modules that researchers can use more or less as-is.
 
 
-## Roadmap and Status
+## Roadmap / status
 The repository currently contains exploratory/proof-of-concept notebooks for finding representations and algorithms that are practically efficient for the feature systems used in phonology. Good algorithms and representations have been found (assuming the user has access to a GPU): relevant calculation for the three problems described above currently takes no more than tens of minutes (rather than hours or days) and only needs to be done *once* for a particular feature system. 
 
 As proof-of-concept code with no expected user or developer audience in the short term besides myself and Jack, the code currently needs to be cleaned up, documented a bit more, and moved out of notebooks into more polished modules; this is in progress.
