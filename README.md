@@ -1,4 +1,4 @@
-# bento-bool
+# prague
 A repo for efficiently calculating and storing the extensions of partial feature vectors (a restricted class of Boolean concepts) with respect to a set of observed objects, and supporting efficient calculation related to checking equivalence of partial feature vectors.
 
 ## Motivation / context
