@@ -372,6 +372,8 @@ def lower_closure(x, strict=False):
 
     This function returns that set as a generator.
     '''
+    #TODO #FIXME make this function match upper_closure in options, performance,
+    # and return-type.
     unspecified_indices = (x == 0).nonzero()[0]
     m_x = len(unspecified_indices)
     #There are 2^i elements in ↓x for each possible combination of i unspecified
@@ -385,3 +387,66 @@ def lower_closure(x, strict=False):
               for spec in map(np.array,
                               itertools.product([-1,1], repeat=len(ind))))
     return down_x
+
+
+##########################
+# CALCULATING EXTENSIONS #
+##########################
+
+
+def objects_to_extension_vector(observed_objects, object_inventory):
+    '''Given
+        a set of observed objects (a stack of feature vectors)
+        a set of potentially observable objects (another stack of vectors)
+    where object_inventory is an ndarray of object vectors with n rows, this
+    returns a vector x of length n where
+        x[i] = 1 iff O[i] ∈ the set of observed objects
+        x[i] = 0 otherwise
+    '''
+    observed_objects_as_extension = extensions(observed_objects,
+                                               object_inventory).sum(axis=0,
+                                                                     dtype=INT8)
+    return observed_objects_as_extension
+
+
+def extension_vector_to_objects(extension_vector, object_inventory):
+    '''Given
+        an extension vector (a binary selection mask) of length n
+        a stack of potentially observable objects (one object/row)
+    this returns the subset of objects given by the extension vector.
+
+    If x is the extension vector and O denotes the object inventory, then the
+    returned stack of vectors S is such that:
+        S.shape == (l,m)
+        O[i] ∈ S iff x[i] == 1
+    where
+        m is the number of features
+        l is the number of nonzero entries of x.
+    '''
+    return object_inventory[extension_vector.nonzero()[0]]
+
+
+#Illustrates efficient extension calculation for a collection of object vectors.
+def extension(u, object_inventory):
+    '''Returns an ndarray x = 〚u〛 representing the subset of object_inventory
+    that partial feature vector u describes, where object_inventory is an
+    ndarray of object vectors (each row is an object).
+
+    If
+        the object inventory is O with |O| objects
+    then
+        |x| = |O| ⟺ x.shape = (n,) and O.shape = (n,m)
+    and
+        x[i] = 1 iff O[i] ∈ 〚u〛
+        x[i] = 0 otherwise
+    '''
+    return lte_specification_stack_left(object_inventory, u)
+
+
+def extensions(S, object_inventory):
+    '''Like extension, but efficiently calculates the collection of extensions
+    for a collection (stack) of partial feature vectors S, where each row of S
+    is a partial feature vector.
+    '''
+    return (np.equal(object_inventory, S[:, None, :]) |
+            np.equal(S, 0)[:, None, :]).prod(axis=2, dtype=INT8)
