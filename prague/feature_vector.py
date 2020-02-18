@@ -450,3 +450,40 @@ def extensions(S, object_inventory):
     '''
     return (np.equal(object_inventory, S[:, None, :]) |
             np.equal(S, 0)[:, None, :]).prod(axis=2, dtype=INT8)
+
+
+def get_pfvs_whose_extension_contains(observed_objects):
+    '''Given
+        a set of observed objects (a stack of feature vectors)
+    this returns
+        the set of partial feature vectors (a stack, one vector per row)
+    whose extension must contain the set of observed objects.
+    '''
+    maximally_specified_compatible_pfv = meet_specification(M=observed_objects)
+    return upper_closure(maximally_specified_compatible_pfv, strict=False)
+
+
+def get_pfvs_whose_extension_is_exactly(observed_objects, object_inventory):
+    '''Given
+        a set of observed objects (a stack of feature vectors)
+        a set of potentially observable objects (another stack of vectors)
+    this returns
+        the set of partial feature vectors (a stack, one vector per row)
+    whose extension must be exactly the set of observed objects.
+    '''
+    observed_objects_as_extension = extensions(observed_objects,
+                                               object_inventory)
+
+    maximally_specified_compatible_pfv = meet_specification(M=observed_objects)
+
+    #in principle, not all of this needs to be generated
+    my_upper_closure = upper_closure(maximally_specified_compatible_pfv,
+                                     strict=False)
+    my_extensions = extensions(my_upper_closure, object_inventory)
+
+    matching_extensions = np.equal(observed_objects_as_extension,
+                                   my_extensions).prod(axis=1)
+    selection_mask = matching_extensions
+    matching_indices = selection_mask.nonzero()[0]
+    matching_partial_feature_vectors = my_upper_closure[matching_indices]
+    return matching_partial_feature_vectors
