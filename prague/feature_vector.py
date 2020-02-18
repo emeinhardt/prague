@@ -7,6 +7,10 @@ import numpy as np
 import scipy.special
 import random
 
+from funcy import cat
+
+import itertools
+
 # from prague.utility import composable_put, composable_put_along_axis
 
 INT8 = np.int8
@@ -357,3 +361,27 @@ def upper_closure(x, strict=False):
     if strict:
         my_upper_closure = my_upper_closure[1:] #pop first element (==x)
     return my_upper_closure
+
+
+def lower_closure(x, strict=False):
+    '''
+    The lower closure ↓x of a pfv x is the set of (optionally strictly) more
+    specified vectors. If X is the set of all partially specified feature
+    vectors, then
+        ↓x = {y ∈ X | y ≤ x}
+
+    This function returns that set as a generator.
+    '''
+    unspecified_indices = (x == 0).nonzero()[0]
+    m_x = len(unspecified_indices)
+    #There are 2^i elements in ↓x for each possible combination of i unspecified
+    #indices.
+    combinations_of_indices_to_specify = cat(itertools.combinations(unspecified_indices, i)
+                                             for i in range(0,m_x))
+#     specifications = cat(map(np.array, permutations([-1,1], len(combo)))
+#                          for combo in combinations_of_indices_to_specify)
+    down_x = (composable_put(x, tuple(ind), spec)
+              for ind in combinations_of_indices_to_specify
+              for spec in map(np.array,
+                              itertools.product([-1,1], repeat=len(ind))))
+    return down_x
