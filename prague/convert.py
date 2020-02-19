@@ -88,20 +88,6 @@ def are_identical(a, b, features_to_ignore=None):
     return True
 
 
-def objects_are_unique(objects, features_to_ignore=None, behavior='Exception'):
-    '''
-    Returns True iff all objects are unique (excluding features in
-    `features_to_ignore`).
-
-    If behavior is 'Exception', then this function will raise an exception if
-    this property does not hold of the set of objects.
-    '''
-    result = not any(has_duplicates(o, objects, features_to_ignore)
-                   for o in objects)
-    if behavior == 'Exception' and result:
-        raise Exception(f"Object set contains duplicates (up to features_to_ignore = {features_to_ignore}):\n{objects}")
-    return result
-
 def get_matches(obj, objects, features_to_ignore=None):
     '''
     Returns M ⊆ `objects` that match `obj`, ignoring `features_to_ignore` as
@@ -117,6 +103,21 @@ def has_duplicates(obj, objects, features_to_ignore=None):
     `objects`.
     '''
     return len(get_matches(obj, objects, features_to_ignore)) > 1
+
+
+def objects_are_unique(objects, features_to_ignore=None, behavior='Exception'):
+    '''
+    Returns True iff all objects are unique (excluding features in
+    `features_to_ignore`).
+
+    If behavior is 'Exception', then this function will raise an exception if
+    this property does not hold of the set of objects.
+    '''
+    duplicates_detected = any(has_duplicates(o, objects, features_to_ignore)
+                              for o in objects)
+    if behavior == 'Exception' and duplicates_detected:
+        raise Exception(f"Object set contains duplicates (up to features_to_ignore = {features_to_ignore}):\n{objects}")
+    return not duplicates_detected
 
 
 def sanitized_objects(objects, duplicate_behavior='ignore', features_to_ignore=None):
@@ -188,6 +189,9 @@ def to_ternary_feature_vectors(objects, remove_duplicates=True, feature_ordering
     ordering of the M features of the objects, this returns an M x N ternary
     NumPy ndarray representing the collection.
 
+    If feature_ordering is not specified, then the features of the first object
+    will be sorted and used.
+
     If remove_duplicates is False (or if objects contains no duplicates), this
     will preserve the ordering (if any) in objects.
 
@@ -195,7 +199,7 @@ def to_ternary_feature_vectors(objects, remove_duplicates=True, feature_ordering
     second value is a list of deleted indices.
     '''
     if feature_ordering is None:
-        features = tuple(list(objects)[0].keys())
+        features = tuple(sorted(list(objects)[0].keys()))
     else:
         features = tuple(feature_ordering)
 
