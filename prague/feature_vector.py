@@ -78,7 +78,7 @@ class HashableArray(object):
                 Defaults to False.
         '''
         self.__tight = tight
-        self.__wrapped = np.array(arr) if tight else wrapped
+        self.__wrapped = np.array(arr) if tight else arr
         self.__hash = int(sha1(arr.view(np.uint8)).hexdigest(), 16)
 
     def __eq__(self, other):
