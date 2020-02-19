@@ -6,5 +6,5 @@ from prague.feature_vector import get_pfvs_whose_extension_contains
 from prague.feature_vector import get_pfvs_whose_extension_is_exactly
 from prague.feature_vector import meet_specification as meet
 from prague.feature_vector import lte_specification as lte
-
+from prague.convert import load_objects
 import prague.convert
