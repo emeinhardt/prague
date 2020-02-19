@@ -45,7 +45,7 @@ def load_objects(input_filepath, delimiter='\t', quoting=csv.QUOTE_NONE,
     '''
     objects = []
 
-    with open(i, encoding='utf-8-sig') as csvfile:
+    with open(input_filepath, encoding='utf-8-sig') as csvfile:
         my_reader = csv.DictReader(csvfile, delimiter=delimiter,
                                    quoting=quoting, quotechar=quotechar)
         for row in my_reader:
@@ -96,7 +96,11 @@ def objects_are_unique(objects, features_to_ignore=None, behavior='Exception'):
     If behavior is 'Exception', then this function will raise an exception if
     this property does not hold of the set of objects.
     '''
-
+    result = not any(has_duplicates(o, objects, features_to_ignore)
+                   for o in objects)
+    if behavior == 'Exception' and result:
+        raise Exception(f"Object set contains duplicates (up to features_to_ignore = {features_to_ignore}):\n{objects}")
+    return result
 
 def get_matches(obj, objects, features_to_ignore=None):
     '''
