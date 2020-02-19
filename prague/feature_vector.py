@@ -67,6 +67,8 @@ class HashableArray(object):
         or the original object (which requires the user to be careful enough
         not to modify it).
     '''
+
+   
     def __init__(self, arr, tight=False):
         r'''Creates a new hashable object encapsulating an ndarray.
 
@@ -81,11 +83,14 @@ class HashableArray(object):
         self.__wrapped = np.array(arr) if tight else arr
         self.__hash = int(sha1(arr.view(np.uint8)).hexdigest(), 16)
 
+
     def __eq__(self, other):
         return np.all(self.__wrapped == other.__wrapped)
 
+
     def __hash__(self):
         return self.__hash
+
 
     def unwrap(self):
         r'''Returns the encapsulated ndarray.
@@ -522,8 +527,10 @@ def get_pfvs_whose_extension_is_exactly(observed_objects, object_inventory):
         the set of partial feature vectors (a stack, one vector per row)
     whose extension must be exactly the set of observed objects.
     '''
-    observed_objects_as_extension = extensions(observed_objects,
-                                               object_inventory)
+    observed_objects_as_extension = objects_to_extension_vector(observed_objects,
+                                                                object_inventory)
+    # observed_objects_as_extension = extensions(observed_objects,
+    #                                            object_inventory)
 
     maximally_specified_compatible_pfv = meet_specification(M=observed_objects)
 
@@ -538,4 +545,3 @@ def get_pfvs_whose_extension_is_exactly(observed_objects, object_inventory):
     matching_indices = selection_mask.nonzero()[0]
     matching_partial_feature_vectors = my_upper_closure[matching_indices]
     return matching_partial_feature_vectors
-
