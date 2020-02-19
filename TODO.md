@@ -6,6 +6,7 @@
  
 ## Project structure
 
+ - update readme.
  - `requirements` file.
 
 ## Implementation / performance
