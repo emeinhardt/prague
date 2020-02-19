@@ -24,7 +24,7 @@ As proof-of-concept code with no expected user or developer audience in the shor
 
 Looking further ahead: while the best current code is clearly practical for the setting of phonological feature systems (with e.g. many redundant features, a tiny ratio of actual objects vs. logically describable objects, the use of conjunctive formulas for concepts), it's not clear what the asymptotic complexity of key operations is. This is scientifically interesting question about feature systems as approximate models of the hypothesis spaces humans use in learning sound patterns, and interesting for determining when the algorithms here will generalize to domains other than phonology.
 
-Another useful direction feature might be adding features to support use with other software that phonological researchers use - e.g. [`Phonological Corpus Tools`](https://corpustools.readthedocs.io).
+Another useful direction feature might be adding features to support use with other software that phonological researchers use - e.g. [`Phonological Corpus Tools`](https://corpustools.readthedocs.io) or [`PanPhon`](https://github.com/dmort27/panphon).
 
 
 ## Structure of the code
