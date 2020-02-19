@@ -21,6 +21,9 @@
 
 ## Other features / interface
 
+ - Better support for creating and being able to use an association between
+   symbols (or object dictionaries) and associated ternary ndarray feature vectors.
+ - Add support for parsing conventional feature vector strings to feature dictionaries.
  - Add CLI support.
  - Add default support/nice integration with `PanPhon`-exportable data
    structures.
