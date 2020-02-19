@@ -529,8 +529,6 @@ def get_pfvs_whose_extension_is_exactly(observed_objects, object_inventory):
     '''
     observed_objects_as_extension = objects_to_extension_vector(observed_objects,
                                                                 object_inventory)
-    # observed_objects_as_extension = extensions(observed_objects,
-    #                                            object_inventory)
 
     maximally_specified_compatible_pfv = meet_specification(M=observed_objects)
 
