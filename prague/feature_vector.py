@@ -11,6 +11,8 @@ from funcy import cat
 
 import itertools
 
+from hashlib import sha1
+
 # from prague.utility import composable_put, composable_put_along_axis
 
 INT8 = np.int8
@@ -48,6 +50,53 @@ def composable_put_along_axis(arr, indices, values, axis=None, copy_arg=True):
         my_arr = arr
     np.put_along_axis(my_arr, indices, values, axis=axis)
     return my_arr
+
+
+#tweaked version of http://machineawakening.blogspot.com/2011/03/making-numpy-ndarrays-hashable.html
+class HashableArray(object):
+    r'''Hashable wrapper for ndarray objects.
+
+        Instances of ndarray are not hashable, meaning they cannot be added to
+        sets, nor used as keys in dictionaries. This is by design - ndarray
+        objects are mutable, and therefore cannot reliably implement the
+        __hash__() method.
+
+        The hashable class allows a way around this limitation. It implements
+        the required methods for hashable objects in terms of an encapsulated
+        ndarray object. This can be either a copied instance (which is safer)
+        or the original object (which requires the user to be careful enough
+        not to modify it).
+    '''
+    def __init__(self, arr, tight=False):
+        r'''Creates a new hashable object encapsulating an ndarray.
+
+            arr
+                The ndarray to wrap.
+
+            tight
+                Optional. If True, a copy of the input ndaray is created.
+                Defaults to False.
+        '''
+        self.__tight = tight
+        self.__wrapped = np.array(arr) if tight else wrapped
+        self.__hash = int(sha1(arr.view(np.uint8)).hexdigest(), 16)
+
+    def __eq__(self, other):
+        return np.all(self.__wrapped == other.__wrapped)
+
+    def __hash__(self):
+        return self.__hash
+
+    def unwrap(self):
+        r'''Returns the encapsulated ndarray.
+
+            If the wrapper is "tight", a copy of the encapsulated ndarray is
+            returned. Otherwise, the encapsulated ndarray itself is returned.
+        '''
+        if self.__tight:
+            return np.array(self.__wrapped)
+
+        return self.__wrapped
 
 
 #################
@@ -453,7 +502,8 @@ def extensions(S, object_inventory):
 
 
 def get_pfvs_whose_extension_contains(observed_objects):
-    '''Given
+    '''
+    Given
         a set of observed objects (a stack of feature vectors)
     this returns
         the set of partial feature vectors (a stack, one vector per row)
@@ -464,7 +514,8 @@ def get_pfvs_whose_extension_contains(observed_objects):
 
 
 def get_pfvs_whose_extension_is_exactly(observed_objects, object_inventory):
-    '''Given
+    '''
+    Given
         a set of observed objects (a stack of feature vectors)
         a set of potentially observable objects (another stack of vectors)
     this returns
@@ -487,3 +538,4 @@ def get_pfvs_whose_extension_is_exactly(observed_objects, object_inventory):
     matching_indices = selection_mask.nonzero()[0]
     matching_partial_feature_vectors = my_upper_closure[matching_indices]
     return matching_partial_feature_vectors
+
