@@ -300,29 +300,12 @@ def lte_specification(u, v):
     return ((u == v) | (u == 0)).all()
 
 
-def lte_specification_stack_right(u, M, axis=1):
-    '''Given a partial feature vector u and a matrix (stack) of partial feature
-    vectors M (one vector per row), this efficiently calculates whether
-        u ≤ M[i]
-    for each of the i vectors. In other words, this checks membership of each
-    M[i] in the upper closure of u.
-
-    If
-        u.shape == (m,)
-    and
-        M.shape == (k,m)
-    then
-        lte_specification_stack_right(u,M).shape == (k,)
-    '''
-    return (np.equal(u, M) | np.equal(M, 0)).prod(axis=axis, dtype=INT8)
-
-
 def lte_specification_stack_left(M, u, axis=1):
     '''Given a partial feature vector u and a matrix (stack) of partial feature
     vectors M (one vector per row), this efficiently calculates whether
         M[i] ≤ u
-    for each of the i vectors. In other words, this checks membership of each
-    M[i] in the lower closure of u.
+    in the specification semilattice for each vector i. In other words, this
+    checks membership of M[i] in the lower closure of u.
 
     If
         u.shape == (m,)
@@ -330,6 +313,23 @@ def lte_specification_stack_left(M, u, axis=1):
         M.shape == (k,m)
     then
         lte_specification_stack_left(M,u).shape == (k,)
+    '''
+    return (np.equal(u, M) | np.equal(M, 0)).prod(axis=axis, dtype=INT8)
+
+
+def lte_specification_stack_right(u, M, axis=1):
+    '''Given a partial feature vector u and a matrix (stack) of partial feature
+    vectors M (one vector per row), this efficiently calculates whether
+        u ≤ M[i]
+    in the specification semilattice for each vector i. In other words, this
+    checks membership of each M[i] in the upper closure of u.
+
+    If
+        u.shape == (m,)
+    and
+        M.shape == (k,m)
+    then
+        lte_specification_stack_right(u,M).shape == (k,)
     '''
     return (np.equal(M, u) | np.equal(u, 0)).prod(axis=axis, dtype=INT8)
 
