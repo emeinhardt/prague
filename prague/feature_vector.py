@@ -243,8 +243,9 @@ def delta_right(u,v):
     where * denotes elementwise product.
 
     Note that
-     - m describes where to flip values of u (viz where m is negative),
-     - b describes where to specify unspecified values of u (viz where b is
+     - m describes where to flip values of u (viz. where m is negative) or
+       unspecify u (viz. where m is 0),
+     - b describes where to specify unspecified values of u (viz. where b is
        non-zero) and how they should be specified.
     '''
     #m can map specified values to specified values and specified values to
@@ -256,6 +257,20 @@ def delta_right(u,v):
     m = u * (v - b) #will be 1 where u and (v-b) are same, -1 where different
     assert np.array_equal((m*u) + b , v)
     return m, b
+
+
+def delta_down(u,v):
+    '''
+    Given v ∈ ↓u, calculates the indices of u that must be unspecified to yield
+    v.
+    '''
+    m, b = delta_right(u,v)
+    assert np.sum(b) == 0, f"v={v} must be in the lower closure of u={u}"
+    indices_to_flip_mask = m == -1
+    assert not np.any(indices_to_flip_mask), f"v={v} must be in the lower closure of u={u}"
+    indices_to_unspecify_mask = m == 0
+    indices_to_unspecify = indices_to_unspecify_mask.nonzero()[0]
+    return indices_to_unspecify
 
 
 #############################
