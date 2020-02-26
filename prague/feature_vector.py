@@ -105,6 +105,27 @@ class HashableArray(object):
         return self.__wrapped
 
 
+def to_feature_dict(feature_seq, u, value_map=None):
+    '''
+    Given a sequence of features, creates an equivalent feature dictionary.
+    Assumes feature_seq is ordered appropriately relative to u.
+
+    If value_map is None, the default (0->'0', 1->'+', -1->'-') will be used.
+    '''
+    n_features = len(feature_Seq)
+    n_vals = u.shape[0]
+    assert n_features == n_vals, f"Num features does not match length of u: {n_features} vs. {n_vals}"
+
+    if value_map is None:
+        value_map = {-1:'-', 1:'+', 0:'0'}
+
+    mapped_vals = [value_map[val]
+                   for val in u]
+
+    return dict(zip(feature_seq, mapped_vals))
+
+
+
 #################
 # Pseudo-typing #
 #################
