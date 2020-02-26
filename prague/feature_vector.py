@@ -289,8 +289,8 @@ def lte_specification(u, v):
       +1 ≤ +1
       -1 ≤ -1
        0 ≤  0
-      +1 ≤  0
-      -1 ≤  0
+       0 ≤ +1
+       0 ≤ -1
     in this semilattice ordering, and and this ordering on feature values is
     extended to vectors in the natural way: this function returns
         1 iff u[i] ≤ v[i] for all i ∈ [0, m-1]
@@ -348,7 +348,9 @@ def meet_specification(u=None, v=None, M=None):
     if u is not None and v is not None:
         return np.sign(  np.equal(u, v) * (u + v), dtype=INT8)
     elif M is not None:
-        return np.sign( np.equal.reduce(M, axis=0) * np.sum(M, axis=0), dtype=INT8)
+        meet_mask = np.all(M == M[0,:], axis=0)
+        return meet_mask * M[0]
+        # return np.sign( np.equal.reduce(M, axis=0) * np.sum(M, axis=0), dtype=INT8)
     else:
         raise Exception('Provide exactly two vectors u,v or else a stack M.')
 
@@ -577,7 +579,7 @@ def get_pfvs_whose_extension_contains(observed_objects):
     whose extension must contain the set of observed objects.
     '''
     maximally_specified_compatible_pfv = meet_specification(M=observed_objects)
-    return upper_closure(maximally_specified_compatible_pfv, strict=False)
+    return lower_closure(maximally_specified_compatible_pfv, strict=False)
 
 
 def get_pfvs_whose_extension_is_exactly(observed_objects, object_inventory):
@@ -595,13 +597,13 @@ def get_pfvs_whose_extension_is_exactly(observed_objects, object_inventory):
     maximally_specified_compatible_pfv = meet_specification(M=observed_objects)
 
     #in principle, not all of this needs to be generated
-    my_upper_closure = upper_closure(maximally_specified_compatible_pfv,
+    my_lower_closure = lower_closure(maximally_specified_compatible_pfv,
                                      strict=False)
-    my_extensions = extensions(my_upper_closure, object_inventory)
+    my_extensions = extensions(my_lower_closure, object_inventory)
 
     matching_extensions = np.equal(observed_objects_as_extension,
                                    my_extensions).prod(axis=1)
     selection_mask = matching_extensions
     matching_indices = selection_mask.nonzero()[0]
-    matching_partial_feature_vectors = my_upper_closure[matching_indices]
+    matching_partial_feature_vectors = my_lower_closure[matching_indices]
     return matching_partial_feature_vectors
