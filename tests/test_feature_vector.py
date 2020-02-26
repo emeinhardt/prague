@@ -87,10 +87,17 @@ S2n = np.array([0,1,1,0,1])
 S3p = np.array([1,1,0,1,0])
 S3n = np.array([0,0,1,0,1])
 
-SFPs = [S0p, S0n,
-        S1p,
-        S2p, S2n,
-        S3p, S3n]
+SFP_exts = [S0p, S0n,
+            S1p,
+            S2p, S2n,
+            S3p, S3n]
+SFP_exts_np = np.array(SFP_exts, dtype=np.int8)
+
+my_S = np.array([[ 1, 0, 0, 0],  #S0p
+                 [-1, 0, 0, 0],  #S0n
+                 [ 0, 1, 0, 0]], #S1p
+                dtype=np.int8)
+my_S_exts = np.array([S0p, S0n, S1p], dtype=np.int8)
 
 ext = fv.extension
 exts = fv.extensions
@@ -99,3 +106,6 @@ def test_SFPs():
     assert np.array_equal(ext(np.array([ 1, 0, 0, 0]), O), S0p)
     assert np.array_equal(ext(np.array([-1, 0, 0, 0]), O), S0n)
     assert np.array_equal(ext(np.array([ 0, 1, 0, 0]), O), S1p)
+
+def test_SFPs_stack():
+    assert np.array_equal(exts(my_S, O), my_S_exts)
