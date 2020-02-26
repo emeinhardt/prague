@@ -558,7 +558,8 @@ def extension(u, object_inventory):
         x[i] = 1 iff O[i] ∈ 〚u〛
         x[i] = 0 otherwise
     '''
-    return lte_specification_stack_left(object_inventory, u)
+    return lte_specification_stack_right(u, object_inventory)
+    # return lte_specification_stack_left(object_inventory, u)
 
 
 def extensions(S, object_inventory):
