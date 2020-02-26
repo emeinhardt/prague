@@ -112,7 +112,7 @@ def to_feature_dict(feature_seq, u, value_map=None):
 
     If value_map is None, the default (0->'0', 1->'+', -1->'-') will be used.
     '''
-    n_features = len(feature_Seq)
+    n_features = len(feature_seq)
     n_vals = u.shape[0]
     assert n_features == n_vals, f"Num features does not match length of u: {n_features} vs. {n_vals}"
 
