@@ -5,6 +5,7 @@ Contains functions for creating and manipulating NumPy ndarrays that represent
 
 import numpy as np
 import scipy.special
+import scipy.spatial.distance
 import random
 
 from funcy import cat
@@ -194,6 +195,46 @@ def load_object_vectors(filepath):
     Loads an ndarray from an .npy file; each row is assumed to be an object.
     '''
     return np.load(filepath)
+
+
+##################
+# PFV DIFFERENCE #
+##################
+
+
+def hamming(u,v):
+    '''
+    Computes the (unnormalized) Hamming distance between 1D arrays u and v -
+    i.e. the number of indices at which u and v differ.
+
+    Basically a wrapper for scipy.spatial.distance.hamming. See that docstring
+    for more details.
+    '''
+    assert u.shape[0] == v.shape[0], f"Shape mismatch: {u.shape} vs. {v.shape}"
+    n = u.shape[0]
+    return int(n * scipy.spatial.distance.hamming(u,v))
+
+
+def delta_right(u,v):
+    '''
+    Calculates the ternary vectors m, b s.t.
+        (m * u) + b = v
+    where * denotes elementwise product.
+
+    Note that
+     - m describes where to flip values of u (viz where m is negative),
+     - b describes where to specify unspecified values of u (viz where b is
+       non-zero) and how they should be specified.
+    '''
+    #m can map specified values to specified values and specified values to
+    # unspecified values
+    #b is responsible for mapping unspecified values to specified ones
+    # specified_mask = u != 0
+    unspecified_mask = u == 0
+    b = unspecified_mask * v
+    m = u * (v - b) #will be 1 where u and (v-b) are same, -1 where different
+    assert np.array_equal((m*u) + b , v)
+    return m, b
 
 
 #############################
