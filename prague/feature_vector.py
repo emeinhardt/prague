@@ -354,17 +354,17 @@ def meet_specification(u=None, v=None, M=None):
 
 
 ############################################################
-# GENERATING THE UPPER CLOSURE OF A PARTIAL FEATURE VECTOR #
+# GENERATING THE LOWER CLOSURE OF A PARTIAL FEATURE VECTOR #
 ############################################################
 
 
 # Useful for testing.
-# Illustrates general idea behind upper_closure.
-def gen_uc(x):
-    '''Generates a random element u of ↑x.
+# Illustrates general idea behind lower_closure.
+def gen_lc(x):
+    '''Generates a random element u of ↓x.
 
     If k = the number of specified indices in x, then, the generative procedure
-    for creating an element u of  ↑x is as follows:
+    for creating an element u of  ↓x is as follows:
       1. A number n≥0 of indices to unspecify is chosen uniformly from [1,k].
       2. n indices are chosen randomly without replacement from among the
       specified ones.
@@ -431,11 +431,11 @@ def n_choose_at_most_k_indices(n, k, asMask=True):
     return mask
 
 
-def upper_closure(x, strict=False):
-    '''The upper closure ↑x of a pfv x is the set of (optionally strictly) less
+def lower_closure(x, strict=False):
+    '''The lower closure ↓x of a pfv x is the set of (optionally strictly) less
     specified vectors. If X is the set of all partially specified feature
     vectors, then
-        ↑x = {y ∈ X | x ≤ y}
+        ↓x = {y ∈ X | y ≤ x}
 
     These are returned as a stack of partial feature vectors (one vector per
     row), with no guarantees about the order of such vectors.
@@ -452,12 +452,12 @@ def upper_closure(x, strict=False):
 
     unspecified_indices = (x == 0).nonzero()[0]
 
-    #There is one element in ↑x for each possible combination of specified
+    #There is one element in ↓x for each possible combination of specified
     # indices = a combination of indices of x that can be *un*specified.
     combinations_of_indices_to_unspecify = n_choose_at_most_k_indices(k, k,
                                                                       asMask=True)
 
-    #The goal is to efficiently generate ↑x via Hadamard product of x with a
+    #The goal is to efficiently generate ↓x via Hadamard product of x with a
     # stack of vectors representing 'masks' that each cause a different kind
     # of unspecification.
 
@@ -473,22 +473,22 @@ def upper_closure(x, strict=False):
     # 0s where we want to erase (unspecify) a value.
     eraser_mask = np.logical_not(selection_mask).astype(INT8)
 
-    my_upper_closure = (x * eraser_mask).astype(INT8)
+    my_lower_closure = (x * eraser_mask).astype(INT8)
     if strict:
-        my_upper_closure = my_upper_closure[1:] #pop first element (==x)
-    return my_upper_closure
+        my_lower_closure = my_lower_closure[1:] #pop first element (==x)
+    return my_lower_closure
 
 
-def lower_closure(x, strict=False):
+def upper_closure(x, strict=False):
     '''
-    The lower closure ↓x of a pfv x is the set of (optionally strictly) more
+    The upper closure ↑x of a pfv x is the set of (optionally strictly) more
     specified vectors. If X is the set of all partially specified feature
     vectors, then
-        ↓x = {y ∈ X | y ≤ x}
+        ↑x = {y ∈ X | x ≤ y}
 
     This function returns that set as a generator.
     '''
-    #TODO #FIXME make this function match upper_closure in options, performance,
+    #TODO #FIXME make this function match lower_closure in options, performance,
     # and return-type.
     unspecified_indices = (x == 0).nonzero()[0]
     m_x = len(unspecified_indices)
@@ -498,11 +498,11 @@ def lower_closure(x, strict=False):
                                              for i in range(0,m_x))
 #     specifications = cat(map(np.array, permutations([-1,1], len(combo)))
 #                          for combo in combinations_of_indices_to_specify)
-    down_x = (composable_put(x, tuple(ind), spec)
+    up_x = (composable_put(x, tuple(ind), spec)
               for ind in combinations_of_indices_to_specify
               for spec in map(np.array,
                               itertools.product([-1,1], repeat=len(ind))))
-    return down_x
+    return up_x
 
 
 ##########################
