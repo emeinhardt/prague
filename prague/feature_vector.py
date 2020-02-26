@@ -270,7 +270,7 @@ def lte_specification(u, v):
       u ≤ v
     in the specification semilattice.
 
-    Intuitively, u ≤ v holds iff v is *less specified* than u. For example,
+    Intuitively, u ≤ v holds iff u is *less specified* than v. For example,
         [+nasal]
     is less specified than [+nasal, +velar], as is
         [+velar]
@@ -284,7 +284,7 @@ def lte_specification(u, v):
     At the element-level
         u[i] ≤ v[i]
     iff
-        (u[i] == v[i]) or (v[i] == 0)
+        (u[i] == v[i]) or (u[i] == 0)
     i.e.
       +1 ≤ +1
       -1 ≤ -1
@@ -297,7 +297,7 @@ def lte_specification(u, v):
     and
         0 otherwise.
     '''
-    return ((u == v) | (v == 0)).all()
+    return ((u == v) | (u == 0)).all()
 
 
 def lte_specification_stack_right(u, M, axis=1):
