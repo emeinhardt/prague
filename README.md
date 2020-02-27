@@ -40,6 +40,10 @@ The repository is currently practically usable as is (particularly if you have l
 2. All code so far takes the entire feature matrix as given and works with that, but typical use cases (for phonologists) will only use a fraction of the total object inventory, so support for easily defining and taking relevant projections would be nice.
 3. Another useful direction feature might be adding features to support use with other software that phonological researchers use - e.g. [`Phonological Corpus Tools`](https://corpustools.readthedocs.io) or [`PanPhon`](https://github.com/dmort27/panphon).
 
+## Requirements
+
+Python 3, `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`.
+
 ## Why `prague`?
 
 [Roman Jakobson](https://www.wikiwand.com/en/Roman_Jakobson) is the linguist most strongly associated with the introduction and use of phonological features. Also `jak` is an already-taken package name.
