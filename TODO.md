@@ -2,6 +2,7 @@
 
 ## Tests
 
+ - Add more unit tests for `feature_vector.py` functions.
  - Add unit tests as multiple implementations of a given function are added.
  
 ## Project structure
