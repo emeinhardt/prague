@@ -1,5 +1,5 @@
 # prague
-A repo for efficiently calculating and storing the extensions of partial feature vectors (a restricted class of Boolean concepts used e.g. in phonology) with respect to a set of observed objects (e.g. speech sounds), and supporting efficient calculation of which partial feature vectors are compatible with a set of observed objects.
+A package for efficiently calculating and storing the extensions of partial feature vectors (a restricted class of Boolean concepts used e.g. in phonology) with respect to a set of observed objects (e.g. speech sounds), and supporting efficient calculation of which partial feature vectors are compatible with a set of observed objects.
 
 ## Motivation / context
 The motivating context for the code in this repository is supporting scientific research in computational models of sound patterns in human languages ('phonology').
@@ -12,9 +12,13 @@ Whether the goal is creating tools that aid phonologists in finding a good descr
   2. **Compatibility Problem**: The set of all partial feature vectors that pick out a set of sounds that *includes* some set of sounds *S*.
   3. **Exact Match Problem**: The set of *all* partial feature vectors that pick out exactly some set of sounds *S*.
 
-Because of the combinatorics involved, there's usually *many* partial feature vectors compatible with a particular observed set of speech sounds participating in some sound pattern, and it's usually not immediately obvious what those partial vectors are. (Zooming out from the specific context of phonology, closely related formal topics are *Boolean concept learning* and *version space learning*.)
+Because of the combinatorics involved, there's usually *many* partial feature vectors compatible with a particular observed set of speech sounds participating in some sound pattern, and it's usually not immediately obvious what those partial vectors are. (Zooming out from the specific context of phonology, closely related formal topics are *Boolean concept learning* and *version space learning*.) See `algebra_notes.pdf` for a more precise formal description of the problems above (and some scratch notes used for ongoing development).
 
 The main algorithmic challenge here is figuring out how to make it as practical as possible to calculate items 1-3 above for any given feature system. This is not currently a solved problem, nor, to my knowledge something that anyone has attempted to seriously tackle - phonologists either have to do this by hand (using their implicit domain knowledge), settle for heuristics, or only expect to have to find the/some of the *minimally* specified feature vectors with a particular extension (set of picked out/described sounds). The goal here is to see how these problems are solvable exactly and with computational resources plausibly available to a researcher working with machine-readable phonological data, and to then produce Python modules that researchers can use more or less as-is.
+
+Currently, the key advantages offered by `prague` (over e.g. a homerolled solution) include:
+ - clear formalization of what the three problems above *are*.
+ - embedding partial feature vectors and the three problems above into extremely well-optimized linear algebra representations and operations that can take advantage of the embarassingly parallel character of most relevant computations while only requiring a relatively small memory footprint.
 
 
 ## Status / organization
