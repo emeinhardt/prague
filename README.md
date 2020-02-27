@@ -36,7 +36,7 @@ The repository is currently practically usable as is (particularly if you have l
 
 
 **Interface**
-1. Functions for conveniently converting between ternary partial feature vectors and interpretable representations (dictionaries/lists of dictionaries or strings with more traditional phonological notation (e.g. `[+nasal +labial]`)).
+1. Support for exporting files - or in-memory functionality - for quickly and easily relating a human-readable representation of a partial feature vector and its already-computed extension.
 2. All code so far takes the entire feature matrix as given and works with that, but typical use cases (for phonologists) will only use a fraction of the total object inventory, so support for easily defining and taking relevant projections would be nice.
 3. Another useful direction feature might be adding features to support use with other software that phonological researchers use - e.g. [`Phonological Corpus Tools`](https://corpustools.readthedocs.io) or [`PanPhon`](https://github.com/dmort27/panphon).
 
