@@ -273,6 +273,16 @@ def delta_down(u,v):
     return indices_to_unspecify
 
 
+def linear_transform(u, m, b):
+    '''Returns (m*u) + b.'''
+    return (m*u) + b
+
+
+def despec(u, indices):
+    '''Returns a copy of u with the given indices unspecified.'''
+    return composable_put(u, indices, 0)
+
+
 #############################
 # SPECIFICATION SEMILATTICE #
 #############################
@@ -373,6 +383,78 @@ def meet_specification(u=None, v=None, M=None):
 ############################################################
 # GENERATING THE LOWER CLOSURE OF A PARTIAL FEATURE VECTOR #
 ############################################################
+
+def get_children(pfv, object_inventory=None):
+    '''
+    Returns pfvs 'one step' below in the specification semilattice.
+
+    If an object_inventory is provided, then only pfvs with a non-empty
+    extension will be returned. Note that:
+     - if 〚v〛= ∅, then it is *possible* that some child has a non-empty
+       extension.
+     - if 〚v〛≠ ∅, then it is *necessary* that *all* children have non-empty
+       extensions.
+    '''
+    m = pfv.shape[0]
+    specified_indices = pfv.nonzero()[0]
+    k = specified_indices.shape[0]
+
+    #TODO this step could be optimized if needed/justified
+    despec_masks = np.ones((k,m), dtype=INT8)
+    for i,x in enumerate(specified_indices):
+        despec_masks[i,x] = 0
+    children = pfv * despec_masks
+
+
+    if object_inventory is None:
+        return children
+
+    child_extensions = extensions(children, object_inventory)
+    extensions_nonempty_indicator = child_extensions.sum(axis=1)
+    nonempty_child_indices = extensions_nonempty_indicator.nonzero()[0]
+    children_with_nonempty_extension = children[nonempty_child_indices]
+    return children_with_nonempty_extension
+
+
+def get_parents(pfv, object_inventory=None):
+    '''
+    Returns pfvs 'one step' above in the specification semilattice.
+
+    If an object_inventory is provided, then only pfvs with a non-empty
+    extension will be returned. Note that:
+     - if 〚v〛= ∅, then it is *necessary* that *all* parents have empty
+       extensions.
+     - if 〚v〛≠ ∅, then it is *possible* that some child has a non-empty
+       extension.
+    '''
+    m = pfv.shape[0]
+    specified_mask = np.abs(pfv, dtype=np.int8)
+    nonspecified_mask = np.logical_not(specified_mask)
+    nonspecified_indices = nonspecified_mask.nonzero()[0]
+    k = nonspecified_indices.shape[0]
+
+    #TODO this step could be optimized if needed/justified
+    spec_mod = np.zeros((2*k,m), dtype=INT8)
+    for i in np.arange(2*k):
+        x = 1 if i % 2 == 0 else -1
+        j = nonspecified_indices[i // 2]
+        spec_mod[i, j] = x
+    parents = pfv + spec_mod
+
+    if object_inventory is None:
+        return parents
+
+    # my_extension = extension(pfv, object_inventory)
+    # current_pfv_is_empty = my_extension.sum() == 0
+#     if current_pfv_is_empty:
+#         print('foo')
+#         return np.empty_like(pfv)[[]]
+
+    parent_extensions = extensions(parents, object_inventory)
+    extensions_nonempty_indicator = parent_extensions.sum(axis=1)
+    nonempty_parent_indices = extensions_nonempty_indicator.nonzero()[0]
+    parents_with_nonempty_extension = parents[nonempty_parent_indices]
+    return parents_with_nonempty_extension
 
 
 # Useful for testing.
