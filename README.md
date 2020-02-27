@@ -42,7 +42,7 @@ The repository is currently practically usable as is (particularly if you have l
 
 ## Requirements
 
-Python 3, `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`.
+Python 3, `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`. Demo notebooks also (non-essentially) make use of `tqdm`.
 
 ## Why `prague`?
 
