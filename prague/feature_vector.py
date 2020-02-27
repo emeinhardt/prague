@@ -125,6 +125,74 @@ def to_feature_dict(feature_seq, u, value_map=None):
     return dict(zip(feature_seq, mapped_vals))
 
 
+def to_spe(feature_seq=None, v=None, d=None):
+    '''
+    Given a a feature dictionary d or both a pfv v and a (complete) sequence of
+    features, this returns a string with equivalent traditional SPE-style
+    notation.
+
+    If a feature dictionary is provided AND a feature sequence is provided,
+    then the feature sequence will determine the ordering of features in the
+    resulting string. Note that in this case, the feature sequence need only
+    mention the specified features of d.
+    '''
+    if d is not None:
+        specified_features = {k for k in d if d[k] != '0'}
+        if feature_seq is not None:
+            missing_from_feature_seq = {f for f in specified_features if f not in feature_seq}
+            if len(missing_from_feature_seq) > 0:
+                raise Exception(f'Specified features of d are missing from feature_seq:\n\t{missing_from_feature_seq}')
+        else:
+            feature_seq = sorted(list(specified_features))
+
+        # value_map = {-1:'-', 1:'+', 0:'0'}
+        # to_val = lambda v:value_map[v]
+
+        # s = ' '.join([f"{to_val(d[f])}{f}" for f in feature_seq if d[f] != '0'])
+        s = "[" + ' '.join([f"{d[f]}{f}" for f in feature_seq if d[f] != '0']) + "]"
+        return s
+    else:
+        d = to_feature_dict(feature_seq, v)
+        return to_spe(d=d)
+
+
+def from_spe(s, features=None):
+    '''
+    Given a one-line string with an SPE-style feature vector, returns an
+    equivalent feature dictionary. In the event you want unspecified features
+    to be explicitly present and unspecified (in general, you should), you must
+    provide a set of features.
+    '''
+    assert s[0] == '['
+    assert s[-1] == ']'
+    no_brackets = s[1:-1]
+    split = [each for each in no_brackets.split(' ') if each != '']
+    space_joined = []
+    for each in split:
+        if each[0] in {'+','-','0'}:
+            space_joined.append(each)
+        else:
+            space_joined[-1] = space_joined[-1] + ' ' + each
+    parse_term = lambda t: (t[1:], t[0])
+    no_terms = len(space_joined) == 0
+
+    if no_terms:
+        return {f:'0' for f in features}
+    spec_map = {f:v for f,v in map(parse_term, space_joined)}
+    assert all(v in {'0','-','+'} for v in spec_map.values()), f"Illegal feature value in parsed vector:\n{spec_map}"
+    if features is not None:
+        d = dict()
+        for f in features:
+            if f not in spec_map:
+                d[f] = '0'
+            else:
+                d[f] = spec_map[f]
+        return d
+    else:
+        return spec_map
+
+
+
 
 #################
 # Pseudo-typing #
