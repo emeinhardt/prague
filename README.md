@@ -17,7 +17,7 @@ Because of the combinatorics involved, there's usually *many* partial feature ve
 The main algorithmic challenge here is figuring out how to make it as practical as possible to calculate items 1-3 above for any given feature system. This is not currently a solved problem, nor, to my knowledge something that anyone has attempted to seriously tackle - phonologists either have to do this by hand (using their implicit domain knowledge), settle for heuristics, or only expect to have to find the/some of the *minimally* specified feature vectors with a particular extension (set of picked out/described sounds). The goal here is to see how these problems are solvable exactly and with computational resources plausibly available to a researcher working with machine-readable phonological data, and to then produce Python modules that researchers can use more or less as-is.
 
 
-## Roadmap / status
+## Status / organization
 The repository is currently practically usable as is (particularly if you have lots of RAM), though there is plenty of room for improvement and additional features.
 
 1. The `data` directory contains two key tab-seprated value files representing two feature systems and speech sound inventories.
@@ -28,8 +28,7 @@ The repository is currently practically usable as is (particularly if you have l
 4. The `scratch` folder contains a variety of exploratory/proof-of-concept notebooks for finding representations and algorithms that are practically efficient for the feature systems used in phonology. Good algorithms and representations have been found (especially if the user has access to a GPU): relevant calculation for the three problems described above currently takes no more than tens of minutes (rather than hours or days) and only needs to be done *once* for a particular feature system. 
 
 
-Roadmap of planned features
----------------------------
+## Roadmap of planned features
 
 **Performance**
 1. There's a lot of room for improving the space efficiency of current functions for solving the Enumeration Problem. This is the highest priority right now.
@@ -40,3 +39,7 @@ Roadmap of planned features
 1. Functions for conveniently converting between ternary partial feature vectors and interpretable representations (dictionaries/lists of dictionaries or strings with more traditional phonological notation (e.g. `[+nasal +labial]`)).
 2. All code so far takes the entire feature matrix as given and works with that, but typical use cases (for phonologists) will only use a fraction of the total object inventory, so support for easily defining and taking relevant projections would be nice.
 3. Another useful direction feature might be adding features to support use with other software that phonological researchers use - e.g. [`Phonological Corpus Tools`](https://corpustools.readthedocs.io) or [`PanPhon`](https://github.com/dmort27/panphon).
+
+## Why `prague`?
+
+[Roman Jakobson](https://www.wikiwand.com/en/Roman_Jakobson) is the linguist most strongly associated with the introduction and use of phonological features. Also `jak` is an already-taken package name.
