@@ -8,7 +8,7 @@ An important feature of human sound patterns is that they usually involve or app
 
 Whether the goal is creating tools that aid phonologists in finding a good description of a sound pattern, comparing phonological theories, or approximately modeling human phonological learning, more basic but critical computational problems include practical and *exact* calculation of things like 
 
-  1. **Enumeration Problem**: Identifying the set of *all* partial feature vectors that pick out a non-empty set of sounds.
+  1. **Enumeration Problem**: Identifying the set of *all* partial feature vectors that pick out at least one non-empty set of sounds.
   2. **Compatibility Problem**: The set of all partial feature vectors that pick out a set of sounds that *includes* some set of sounds *S*.
   3. **Exact Match Problem**: The set of *all* partial feature vectors that pick out exactly some set of sounds *S*.
 
