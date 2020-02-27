@@ -395,11 +395,16 @@ def get_children(pfv, object_inventory=None):
      - if 〚v〛≠ ∅, then it is *necessary* that *all* children have non-empty
        extensions.
     '''
+    #TODO support alternative functionality to avoid generating particular
+    # children (besides those with nonempty extension)
+
     m = pfv.shape[0]
     specified_indices = pfv.nonzero()[0]
     k = specified_indices.shape[0]
 
     #TODO this step could be optimized if needed/justified
+    #TODO it might be ideal to alter this step to never generate children with
+    # empty extension (or other properties, cf above)
     despec_masks = np.ones((k,m), dtype=INT8)
     for i,x in enumerate(specified_indices):
         despec_masks[i,x] = 0
@@ -427,6 +432,9 @@ def get_parents(pfv, object_inventory=None):
      - if 〚v〛≠ ∅, then it is *possible* that some child has a non-empty
        extension.
     '''
+    #TODO support alternative functionality to avoid generating particular
+    # parents (besides those with nonempty extension)
+
     m = pfv.shape[0]
     specified_mask = np.abs(pfv, dtype=np.int8)
     nonspecified_mask = np.logical_not(specified_mask)
@@ -434,6 +442,8 @@ def get_parents(pfv, object_inventory=None):
     k = nonspecified_indices.shape[0]
 
     #TODO this step could be optimized if needed/justified
+    #TODO it might be ideal to alter this step to never generate parents with
+    # empty extension (or other properties, cf above)
     spec_mod = np.zeros((2*k,m), dtype=INT8)
     for i in np.arange(2*k):
         x = 1 if i % 2 == 0 else -1
