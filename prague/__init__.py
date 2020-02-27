@@ -4,7 +4,7 @@ from prague.feature_vector import make_random_objects, load_object_vectors
 
 from prague.feature_vector import HashableArray
 
-from prague.feature_vector import to_feature_dict
+from prague.feature_vector import to_feature_dict, to_spe, from_spe
 
 from prague.feature_vector import lte_specification as lte
 from prague.feature_vector import meet_specification as meet
