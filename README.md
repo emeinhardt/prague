@@ -17,8 +17,8 @@ Because of the combinatorics involved, there's usually *many* partial feature ve
 The main algorithmic challenge here is figuring out how to make it as practical as possible to calculate items 1-3 above for any given feature system. This is not currently a solved problem, nor, to my knowledge something that anyone has attempted to seriously tackle - phonologists either have to do this by hand (using their implicit domain knowledge), settle for heuristics, or only expect to have to find the/some of the *minimally* specified feature vectors with a particular extension (set of picked out/described sounds). The goal here is to see how these problems are solvable exactly and with computational resources plausibly available to a researcher working with machine-readable phonological data, and to then produce Python modules that researchers can use more or less as-is.
 
 Currently, the key advantages offered by `prague` (over e.g. a homerolled solution) include:
- - clear formalization of what the three problems above *are*.
- - embedding partial feature vectors and the three problems above into extremely well-optimized linear algebra representations and operations that can take advantage of the embarassingly parallel character of most relevant computations while only requiring a relatively small memory footprint.
+ - clear formalization of what the three problems above *are* and what their substructure is.
+ - embedding partial feature vectors and the three problems above into extremely well-optimized linear algebra representations and operations that can take advantage of the embarassingly parallel character of most relevant computations with a relatively small memory footprint.
 
 
 ## Status / organization
@@ -50,4 +50,4 @@ Python 3, `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`. Dem
 
 ## Why `prague`?
 
-[Roman Jakobson](https://www.wikiwand.com/en/Roman_Jakobson) is the linguist most strongly associated with the introduction and use of phonological features. Also `jak` is an already-taken package name.
+[Roman Jakobson](https://www.wikiwand.com/en/Roman_Jakobson) is the linguist most strongly associated with the introduction and use of phonological features. Because `jak` is an already-taken package name, and Jakobson was associated with the [Prague Linguistic Circle](https://www.wikiwand.com/en/Prague_linguistic_circle) for much of his career, `prague` seems like a reasonable choice for a single-word package name associated with distinctive feature calculations.
