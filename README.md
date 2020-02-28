@@ -56,7 +56,7 @@ On top of the Compatibility Problem and the Exact Match problem, each of the mot
 
 ## Requirements
 
-Python 3, `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`. Demo notebooks also (non-essentially) make use of `tqdm`.
+Use of this package requires Python 3, plus installation (via your choice of e.g. `pip` or `conda`) of `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`. Demo notebooks also (non-essentially) make use of `tqdm`.
 
 ## Why `prague`?
 
