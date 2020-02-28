@@ -35,16 +35,19 @@ The repository is currently practically usable as is (particularly if you have l
 ## Roadmap of planned features
 
 **Performance**
+
 1. There's a lot of room for improving the space efficiency of current functions for solving the Enumeration Problem. This is the highest priority right now.
 2. Depending on whether the user has lots of RAM, lots of cores, or access to a GPU, it would be nice to have multiple implementations of core functions for solving the three key problems mentioned above and some way of letting the user choose among them.
 
 
 **Interface**
+
 1. Support for exporting files - or in-memory functionality - for quickly and easily relating a human-readable representation of a partial feature vector and its already-computed extension.
 2. All code so far takes the entire feature matrix as given and works with that, but typical use cases (for phonologists) will only use a fraction of the total object inventory, so support for easily defining and taking relevant projections would be nice.
 3. Another useful direction feature might be adding features to support use with other software that phonological researchers use - e.g. [`Phonological Corpus Tools`](https://corpustools.readthedocs.io) or [`PanPhon`](https://github.com/dmort27/panphon).
 
 **Analysis/Applications**
+
 On top of the Compatibility Problem and the Exact Match problem, each of the motivations for solving the enumeration problem presents a small domain where some auxiliary functions would be useful to have as part of `prague`/to illustrate its use and functionality. Below are some example domains:
 
 1. *Bayesian inference*: Given a probability mass function (pmf) defining a prior distribution over partial feature vectors and some simple assumptions about the likelihood function, the extensions calculated by `prague` let you efficiently calculate the marginal probability of a set of observed objects or the posterior probability of a partial feature vector given a set of observed objects.
