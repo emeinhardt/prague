@@ -44,6 +44,13 @@ The repository is currently practically usable as is (particularly if you have l
 2. All code so far takes the entire feature matrix as given and works with that, but typical use cases (for phonologists) will only use a fraction of the total object inventory, so support for easily defining and taking relevant projections would be nice.
 3. Another useful direction feature might be adding features to support use with other software that phonological researchers use - e.g. [`Phonological Corpus Tools`](https://corpustools.readthedocs.io) or [`PanPhon`](https://github.com/dmort27/panphon).
 
+**Analysis/Applications**
+On top of the Compatibility Problem and the Exact Match problem, each of the motivations for solving the enumeration problem presents a small domain where some auxiliary functions would be useful to have as part of `prague`/to illustrate its use and functionality. Below are some example domains:
+
+1. *Bayesian inference*: Given a probability mass function (pmf) defining a prior distribution over partial feature vectors and some simple assumptions about the likelihood function, the extensions calculated by `prague` let you efficiently calculate the marginal probability of a set of observed objects or the posterior probability of a partial feature vector given a set of observed objects.
+2. *Feature predictiveness*: What is the implicative structure of a feature system - in general or for the inventory of a particular language? More preceisely: what does a particular partial assignment of values to features tell you about what the other feature values are more or less likely to be? I.e. given a pmf (prior) *p* over possible object types *O*, what is the *pointwise mutual information* between knowing that a (partially hidden) object (chosen according to *p*) has *k* of its *m* features with particular values and knowing that the rest of its unobserved features have a particular assignment of values?
+3. *Comparison of two feature systems*...w.r.t. either of the previous two problems.
+
 ## Requirements
 
 Python 3, `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`. Demo notebooks also (non-essentially) make use of `tqdm`.
