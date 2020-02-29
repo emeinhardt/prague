@@ -11,6 +11,9 @@ Development-oriented todo list.
 
  - `requirements` file.
  - add license.
+ 
+## Core features
+ - Add functionality for solving the function analogues of the three problems described in the `readme`.
 
 ## Implementation / performance features
 
