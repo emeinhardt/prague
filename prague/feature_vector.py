@@ -360,15 +360,10 @@ def despec(u, indices):
     return composable_put(u, indices, 0)
 
 
-def spe_update(a, b, object_inventory=None):
+def spe_update(a, b):
     '''
     Coerces a to reflect what's specified in b (per an SPE-style unconditioned
     rule analogous to "a ⟶ b"; does not support alpha notation).
-
-    If object_inventory is None, this interprets a and b literally; else, this
-    computes the set of minimal sets of changes you'd have to make to the
-    literal update to keep the result inside object_inventory, and returns those
-    resulting pfvs.
     '''
     b_specification_mask = np.abs(b, dtype=INT8)
     b_unspecification_mask = np.logical_not(b_specification_mask)
@@ -378,71 +373,76 @@ def spe_update(a, b, object_inventory=None):
     # for i in np.arange(new_a):
     #     if b[i] != 0:
     #         new_a[i] = b[i]
-    # return new_a
-    if object_inventory is None:
-        return new_a
+    return new_a
+    # if object_inventory is None:
+    #     return new_a
 
-    my_ext = extension(new_a, object_inventory)
-    if my_ext.sum() > 0:
-        return new_a
+    # "If object_inventory is None, this interprets a and b literally; else, this
+    # computes the set of minimal sets of changes you'd have to make to the
+    # literal update to keep the result inside object_inventory, and returns those
+    # resulting pfvs."
 
-    #TODO implement this efficiently
-    print(f'Coerced vector has empty extension:\n{new_a}')
+    # my_ext = extension(new_a, object_inventory)
+#     if my_ext.sum() > 0:
+#         return new_a
 
-    #if new_a has an empty extension, then the only way to alter it and end up
-    #with something that has a nonempty extension is to pick some subset of
-    #currently specified indices (not including what's specified in b) and
-    #either unspecifying them or flipping their specification
-    new_a_specification_mask = np.abs(new_a, dtype=INT8)
-    new_a_mutatable_mask = new_a_specification_mask * b_unspecification_mask
-    mutable_indices = new_a_mutatable_mask.nonzero()[0]
-    l = mutable_indices.shape[0]
-    m = a.shape[0]
-#     print(f"m = {m}\n"
-#           f"a = {a}")
+#     #TODO implement this efficiently
+#     print(f'Coerced vector has empty extension:\n{new_a}')
 
-    #For each of the l nonzero indices in new_a_mutable_mask, there are two
-    #possible updates, leading to a total of 2^l alterations of new_a.
-    #We want 'minimal' alterations with non-empty extension.
-    # basic_alterations = np.ones((2*l,m), dtype=INT8)
-    # for i in np.arange(2*l): #which basic alteration are we building?
-    #     j = i // 2 #which index are we using to build the basic alteration?
-    #     k = i % 2 #which effect is the basic alteration going to have?
-    #     mod_index = mutable_indices[j]
-    #     mod_type = {0:0,    #despecify
-    #                 1:-1}[k]#, #flip value
-    #                 # 2:-1}
-    #     basic_alterations[i, mod_index] = mod_type
-    # return basic_alterations
-    # alterations = np.ones((2**l,m), dtype=INT8)
-    # for i in np.arange(2**l):
-        # alterations
-    reachable_pfvs = []
-    k = 1
-    while k <= l:
-#         print(f'k={k}')
-        indices_to_modify = list(itertools.combinations(mutable_indices, k))
-        for index_set in indices_to_modify:
-#             print(f"index_set={index_set}")
-            modifications = list(itertools.product((0,-1), repeat=len(index_set)))
-            new_pfvs = np.tile(new_a, (len(modifications), 1))
-#             print(f"new_pfvs.shape = {new_pfvs.shape}")
-            for i, mod in enumerate(modifications):
-                new_pfvs[i, np.array(index_set)] = np.array(mod)
-#                 print(f"\ti, mod = {i},{mod}\n"
-#                       f"\t{new_pfvs[i, np.array(index_set)]}")
-            new_exts = extensions(new_pfvs, object_inventory)
-#             print(f'new_exts =\n{new_exts}')
-            are_nonempty_indicator = new_exts.sum(axis=1) > 0
-#             print(f"are_nonempty_indicator =\n{are_nonempty_indicator}")
-            new_pfvs_with_nonempty_extension = new_pfvs[are_nonempty_indicator]
-#             print(f"new_pfvs_with_nonempty_extension =\n{new_pfvs_with_nonempty_extension}")
-            if new_pfvs_with_nonempty_extension.shape[0] > 0:
-                reachable_pfvs.append(new_pfvs_with_nonempty_extension)
-        if len(reachable_pfvs) > 0:
-            return np.vstack(reachable_pfvs)
-        k+=1
-    raise Exception('wtf: no coercible vector within edit distance {k} that maintains {b}')
+#     #if new_a has an empty extension, then the only way to alter it and end up
+#     #with something that has a nonempty extension is to pick some subset of
+#     #currently specified indices (not including what's specified in b) and
+#     #either unspecifying them or flipping their specification
+#     new_a_specification_mask = np.abs(new_a, dtype=INT8)
+#     new_a_mutatable_mask = new_a_specification_mask * b_unspecification_mask
+#     mutable_indices = new_a_mutatable_mask.nonzero()[0]
+#     l = mutable_indices.shape[0]
+#     m = a.shape[0]
+# #     print(f"m = {m}\n"
+# #           f"a = {a}")
+
+#     #For each of the l nonzero indices in new_a_mutable_mask, there are two
+#     #possible updates, leading to a total of 2^l alterations of new_a.
+#     #We want 'minimal' alterations with non-empty extension.
+#     # basic_alterations = np.ones((2*l,m), dtype=INT8)
+#     # for i in np.arange(2*l): #which basic alteration are we building?
+#     #     j = i // 2 #which index are we using to build the basic alteration?
+#     #     k = i % 2 #which effect is the basic alteration going to have?
+#     #     mod_index = mutable_indices[j]
+#     #     mod_type = {0:0,    #despecify
+#     #                 1:-1}[k]#, #flip value
+#     #                 # 2:-1}
+#     #     basic_alterations[i, mod_index] = mod_type
+#     # return basic_alterations
+#     # alterations = np.ones((2**l,m), dtype=INT8)
+#     # for i in np.arange(2**l):
+#         # alterations
+#     reachable_pfvs = []
+#     k = 1
+#     while k <= l:
+# #         print(f'k={k}')
+#         indices_to_modify = list(itertools.combinations(mutable_indices, k))
+#         for index_set in indices_to_modify:
+# #             print(f"index_set={index_set}")
+#             modifications = list(itertools.product((0,-1), repeat=len(index_set)))
+#             new_pfvs = np.tile(new_a, (len(modifications), 1))
+# #             print(f"new_pfvs.shape = {new_pfvs.shape}")
+#             for i, mod in enumerate(modifications):
+#                 new_pfvs[i, np.array(index_set)] = np.array(mod)
+# #                 print(f"\ti, mod = {i},{mod}\n"
+# #                       f"\t{new_pfvs[i, np.array(index_set)]}")
+#             new_exts = extensions(new_pfvs, object_inventory)
+# #             print(f'new_exts =\n{new_exts}')
+#             are_nonempty_indicator = new_exts.sum(axis=1) > 0
+# #             print(f"are_nonempty_indicator =\n{are_nonempty_indicator}")
+#             new_pfvs_with_nonempty_extension = new_pfvs[are_nonempty_indicator]
+# #             print(f"new_pfvs_with_nonempty_extension =\n{new_pfvs_with_nonempty_extension}")
+#             if new_pfvs_with_nonempty_extension.shape[0] > 0:
+#                 reachable_pfvs.append(new_pfvs_with_nonempty_extension)
+#         if len(reachable_pfvs) > 0:
+#             return np.vstack(reachable_pfvs)
+#         k+=1
+#     raise Exception('wtf: no coercible vector within edit distance {k} that maintains {b}')
 
 
 #############################
