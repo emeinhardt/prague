@@ -31,7 +31,6 @@ The repository is currently practically usable as is (particularly if you have l
 3. The `demo` directory contains two Jupyter notebooks outlining use of the two main modules (`prague.convert`, `prague.feature_vector`).
 4. The `scratch` folder contains a variety of exploratory/proof-of-concept notebooks for finding representations and algorithms that are practically efficient for the feature systems used in phonology. Good algorithms and representations have been found (especially if the user has access to a GPU): relevant calculation for the three problems described above currently takes no more than tens of minutes (rather than hours or days) and only needs to be done *once* for a particular feature system. 
 
-
 ## Roadmap of planned features
 
 **Performance**
@@ -59,6 +58,16 @@ On top of the Compatibility Problem and the Exact Match problem, each of the mot
 ## Requirements
 
 Use of this package requires Python 3, plus installation (via your choice of e.g. `pip` or `conda`) of `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`. Demo notebooks also (non-essentially) make use of `tqdm`.
+
+### Painless installation / usage
+I assume you have `conda` installed.
+
+0. Navigate to a folder of your choice.
+1. `git clone https://github.com/emeinhardt/prague.git`
+2. Navigate to `prague` (`cd prague` on *nix-like OSs).
+3. Create a `conda` environment with the relevant dependencies via `conda env create -f prague_env.yml` (follow prompts), and then `conda activate prague`.
+4. As long as the repository root directory is on the path/current directory, you should be able to `import prague` as a Python module --- see e.g. the demo notebooks in `prague/demo/`.
+
 
 ## Why `prague`?
 
