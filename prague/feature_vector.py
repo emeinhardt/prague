@@ -17,6 +17,93 @@ from hashlib import sha1
 INT8 = np.int8
 
 
+#################################
+# HASHING BALANCED TERNARY PFVS #
+#################################
+
+
+UNSIGNED_PRECISIONS = np.array([8,16,32,64]).astype(np.uint64)
+UNSIGNED_MAX_INTS = (2 ** unsigned_precisions) - 1
+UNSIGNED_MAX_INTS
+MAX_M_FOR_HASHING = 40 # 3^40 < 2^64, but 3^41 > 2^64....
+
+# 64 * np.log(2) / np.log(39) is slightly more than 40
+# 23 * np.log(3) / np.log(20) is slightly more than 36 => we'll need np.uint64 precision...
+
+
+def ternary_pfv_to_trits(pfv):
+    '''
+    Converts a balanced ternary pfv to base-3.
+    '''
+    return pfv + 1
+
+
+def trits_to_ternary_pfv(trits):
+    '''
+    Converts a base-3 ndarry to balanced ternary.
+    '''
+    return trits - 1
+
+
+def trits_to_digits(trits):
+    '''
+    Converts a base-3 array to base-10.
+
+    (Also converts dtype to np.uint64.)
+    '''
+    m = trits.shape[0]
+    exponents = np.flip(np.arange(m)).astype(np.uint64)
+    my_base = 3
+    powers = np.power(np.array([my_base], dtype=np.uint64),
+                      exponents)
+    terms = np.multiply(powers, trits.astype(np.uint64), dtype=np.uint64)
+    return terms
+
+
+def digits_to_trits(digits):
+    '''
+    Converts a base-10 array to base-3.
+    '''
+    m = digits.shape[0]
+    terms = []
+    base10_int = np.sum(digits.astype(np.uint64))
+    quotient = base10_int
+    while quotient > 3:
+        terms.append(quotient % 3)
+        quotient = quotient // 3
+        if quotient <= 3:
+            terms.append(quotient)
+    terms = list(reversed(terms))
+    return np.array(terms, dtype=INT8)
+
+
+def digits_to_int(digits, precision=None):
+    '''
+    Converts a base-10 array to an unsigned int.
+
+    precision defaults to np.uint64.
+    '''
+    m = digits.shape[0]
+    my_type = np.uint64 if precision is None else precision
+    base10_int = np.sum(digits.astype(np.uint64), dtype=my_type)
+    return base10_int
+
+
+def hash_ternary_pfv(pfv, precision=None):
+    '''
+    Converts a balanced ternary pfv to a unique unsigned int corresponding
+    to a base-10 representation.
+
+    precision defaults to np.uint64.
+    '''
+    trits = ternary_pfv_to_trits(pfv)
+    digits = trits_to_digits(trits)
+    del trits
+    my_int = digits_to_int(digits, precision=precision)
+    del digits
+    return my_int
+
+
 ###########
 # UTILITY #
 ###########
