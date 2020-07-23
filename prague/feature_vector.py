@@ -23,7 +23,7 @@ INT8 = np.int8
 
 
 UNSIGNED_PRECISIONS = np.array([8,16,32,64]).astype(np.uint64)
-UNSIGNED_MAX_INTS = (2 ** unsigned_precisions) - 1
+UNSIGNED_MAX_INTS = (2 ** UNSIGNED_PRECISIONS) - 1
 UNSIGNED_MAX_INTS
 MAX_M_FOR_HASHING = 40 # 3^40 < 2^64, but 3^41 > 2^64....
 
