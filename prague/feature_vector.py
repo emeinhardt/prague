@@ -28,7 +28,8 @@ UNSIGNED_MAX_INTS
 MAX_M_FOR_HASHING = 40 # 3^40 < 2^64, but 3^41 > 2^64....
 
 # 64 * np.log(2) / np.log(39) is slightly more than 40
-# 23 * np.log(3) / np.log(20) is slightly more than 36 => we'll need np.uint64 precision...
+# 23 * np.log(3) / np.log(20) is slightly more than 36
+#                                         => we'll need np.uint64 precision...
 
 
 def ternary_pfv_to_trits(pfv):
@@ -89,6 +90,15 @@ def digits_to_int(digits, precision=None):
     return base10_int
 
 
+def int_to_digits(i):
+    '''
+    Converts a base-10 unsigned 64-bit integer to an ndarray of np.uint64s.
+    '''
+    if i < 0:
+        raise Exception(f"i must be >= 0, got {i} instead.")
+    return np.array(lmap(lambda d: int(d), list(str(i))), dtype=np.uint64)
+
+
 def hash_ternary_pfv(pfv, precision=None):
     '''
     Converts a balanced ternary pfv to a unique unsigned int corresponding
@@ -102,6 +112,19 @@ def hash_ternary_pfv(pfv, precision=None):
     my_int = digits_to_int(digits, precision=precision)
     del digits
     return my_int
+
+
+def decode_hash(hash_int):
+    '''
+    Converts an unsigned 64-bit integer representing the hash of a balanced
+    ternary array back into that array.
+    '''
+    digits = int_to_digits(hash_int)
+    trits = digits_to_trits(digits)
+    del digits
+    balanced_ternary_pfv = trits_to_ternary_pfv(trits)
+    del trits
+    return balanced_ternary_pfv
 
 
 ###########
