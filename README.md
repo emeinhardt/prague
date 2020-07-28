@@ -79,3 +79,8 @@ I assume you have `conda` installed.
 ## Why `prague`?
 
 [Roman Jakobson](https://www.wikiwand.com/en/Roman_Jakobson) is the linguist most strongly associated with the introduction and use of phonological features. Because `jak` is an already-taken package name, and Jakobson was associated with the [Prague Linguistic Circle](https://www.wikiwand.com/en/Prague_linguistic_circle) for much of his career, `prague` seems like a reasonable choice for a single-word package name associated with distinctive feature calculations.
+
+**Alternative package name possibilities:**
+ - `bento-bool`
+ - `jak`
+ - `jakety-stax`
