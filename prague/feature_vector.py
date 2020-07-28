@@ -8,11 +8,13 @@ import scipy.special
 import scipy.spatial.distance
 import random
 
-from funcy import cat
+from funcy import cat, lmap
 
 import itertools
 
 from hashlib import sha1
+
+import collections
 
 INT8 = np.int8
 
@@ -22,10 +24,9 @@ INT8 = np.int8
 #################################
 
 
-UNSIGNED_PRECISIONS = np.array([8,16,32,64]).astype(np.uint64)
+UNSIGNED_PRECISIONS = np.array([8, 16, 32, 64]).astype(np.uint64)
 UNSIGNED_MAX_INTS = (2 ** UNSIGNED_PRECISIONS) - 1
-UNSIGNED_MAX_INTS
-MAX_M_FOR_HASHING = 40 # 3^40 < 2^64, but 3^41 > 2^64....
+MAX_M_FOR_HASHING = 40  # 3^40 < 2^64, but 3^41 > 2^64....
 
 # 64 * np.log(2) / np.log(39) is slightly more than 40
 # 23 * np.log(3) / np.log(20) is slightly more than 36
@@ -34,25 +35,35 @@ MAX_M_FOR_HASHING = 40 # 3^40 < 2^64, but 3^41 > 2^64....
 
 def ternary_pfv_to_trits(pfv):
     '''
-    Converts a balanced ternary pfv to base-3.
+    Converts a balanced ternary pfv to base-3 ('unbalanced trinary' or
+    'unbalanced ternary') element-wise:
+      [-1, 1, 0] => [0, 2, 1]
     '''
     return pfv + 1
 
 
 def trits_to_ternary_pfv(trits):
     '''
-    Converts a base-3 ndarry to balanced ternary.
+    Converts a base-3 ndarry to balanced ternary, element-wise:
+      [0, 2, 1] => [-1, 1, 0]
     '''
     return trits - 1
 
 
 def trits_to_digits(trits):
     '''
-    Converts a base-3 array to base-10.
+    Converts a base-3 array to base-10 in the following sense:
+      [1, 2, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
+    so this function maps
+      [1, 2, 0] => [9, 6, 0]
 
     (Also converts dtype to np.uint64.)
+
+    If trits has more than one dimension, the last dimension is assumed to be
+    (unbalanced trinary) representation of pfvs.
+
     '''
-    m = trits.shape[0]
+    m = trits.shape[-1]
     exponents = np.flip(np.arange(m)).astype(np.uint64)
     my_base = 3
     powers = np.power(np.array([my_base], dtype=np.uint64),
@@ -63,41 +74,70 @@ def trits_to_digits(trits):
 
 def digits_to_trits(digits):
     '''
-    Converts a base-10 array to base-3.
+    Converts a base-10 array to base-3 in the following sense:
+      [9, 6, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
+    so this function maps
+      [9, 6, 0] => [1, 2, 0]
+
+    (Also converts dtype to np.int8.)
+
+    If trits has more than one dimension, the last dimension is assumed to be
+    the digit-based representation of pfvs.
     '''
-    m = digits.shape[0]
-    terms = []
-    base10_int = np.sum(digits.astype(np.uint64))
-    quotient = base10_int
-    while quotient > 3:
-        terms.append(quotient % 3)
-        quotient = quotient // 3
-        if quotient <= 3:
-            terms.append(quotient)
-    terms = list(reversed(terms))
-    return np.array(terms, dtype=INT8)
+    m = digits.shape[-1]
+    exponents = np.flip(np.arange(m)).astype(np.uint64)
+    my_base = 3
+    powers = np.power(np.array([my_base], dtype=np.uint64),
+                      exponents)
+    trits = (digits / powers).astype(INT8)
+    return trits
 
 
 def digits_to_int(digits, precision=None):
     '''
-    Converts a base-10 array to an unsigned int.
+    Converts a base-10 array to its corresponding unsigned int in the following
+    sense:
+       [9, 6, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
+       = the trinary number 120
+    so this function maps
+      [9, 6, 0] => np.sum([9, 6, 0]) => 15
 
     precision defaults to np.uint64.
+
+    If digits has more than one dimension, the last dimension is assumed to be
+    the digit-based representation of pfvs.
     '''
-    m = digits.shape[0]
+    m = digits.shape[-1]
     my_type = np.uint64 if precision is None else precision
-    base10_int = np.sum(digits.astype(np.uint64), dtype=my_type)
+    if m > MAX_M_FOR_HASHING:
+        raise Exception(f'Maximum num features supported is m = {MAX_M_FOR_HASHING}!')
+    base10_int = np.sum(digits.astype(np.uint64), dtype=my_type, axis=-1)
     return base10_int
 
 
 def int_to_digits(i):
     '''
-    Converts a base-10 unsigned 64-bit integer to an ndarray of np.uint64s.
-    '''
-    if i < 0:
-        raise Exception(f"i must be >= 0, got {i} instead.")
-    return np.array(lmap(lambda d: int(d), list(str(i))), dtype=np.uint64)
+    When handed a base-10 unsigned 64-bit integer, converts it to an ndarray of np.uint64s
+    representing the corresponding digits from left to right.
 
+    Extends in the natural way to stacks of integers:
+      int_to_digits(np.array([80289929204, 29203]))
+      => array([[8, 0, 2, 8, 9, 9, 2, 9, 2, 0, 4],
+                [0, 0, 0, 0, 0, 0, 2, 9, 2, 0, 3]], dtype=uint64)
+    '''
+    #adapted from https://stackoverflow.com/a/51040727
+    assert not np.any(i < 0), f"i must be >= 0, instead got\n{i}"
+    if type(i) == type(10):
+        i = np.array([i], dtype=np.uint64)
+    else:
+        i = i.astype(np.uint64)
+    b = 10                                                   # Base, in our case 10, for 1, 10, 100, 1000, ...
+    n = np.ceil(np.max(np.log(i) / np.log(b))).astype(int)     # Number of digits
+    d = np.arange(n)                                         # Divisor base b, b ** 2, b ** 3, ...
+    d.shape = d.shape + (1,) * (i.ndim)                      # Add dimensions to divisor for broadcasting
+    out = (i // b ** d % b).astype(np.uint64)
+    reshaped = np.flip(out.T, axis=-1).astype(INT8)
+    return reshaped
 
 def hash_ternary_pfv(pfv, precision=None):
     '''
@@ -107,6 +147,10 @@ def hash_ternary_pfv(pfv, precision=None):
     precision defaults to np.uint64.
     '''
     trits = ternary_pfv_to_trits(pfv)
+
+    #FIXME TODO
+    #the trits_to_digits and digits_to_int calls below could be rewritten to
+    # save on both time and space and just do a dot product...
     digits = trits_to_digits(trits)
     del trits
     my_int = digits_to_int(digits, precision=precision)
@@ -470,7 +514,7 @@ def despec(u, indices):
     return composable_put(u, indices, 0)
 
 
-def spe_update(a, b):
+def spe_update(a, b, object_inventory=None):
     '''
     Coerces a to reflect what's specified in b (per an SPE-style unconditioned
     rule analogous to "a ⟶ b"; does not support alpha notation).
@@ -884,6 +928,43 @@ def upper_closure(x, strict=False):
               for spec in map(np.array,
                               itertools.product([-1,1], repeat=len(ind))))
     return up_x
+
+
+def lower_closure_BFE(x, object_inventory=None, prev_pfvs=None):
+    '''
+    Calculates the lower closure of x via breadth-first enumeration...
+    '''
+    x_hashed = hash_ternary_pfv(x)
+
+    visited = collections.defaultdict(lambda: False)
+    queue = []
+    queue.append(x_hashed)
+    visited[x_hashed] = True
+
+    def adjacent_nodes(hashed_pfv):
+        unhashed_pfv = decode_hash(hashed_pfv)
+        children = get_children(unhashed_pfv,
+                                object_inventory=object_inventory)
+        return children
+
+    def out_of_bounds(unhashed_pfv):
+        if prev_pfvs is None:
+            return False
+        pfv_is_lte_prev_pfvs = lte_specification_stack_right(unhashed_pfv,
+                                                             prev_pfvs)
+        return np.any(pfv_is_lte_prev_pfvs)
+
+    while queue:
+        current_node = queue.pop(0)
+        for adj_node in adjacent_nodes(current_node):
+            hashed_node = hash_ternary_pfv(adj_node)
+            if not visited[hashed_node] and not out_of_bounds(adj_node):
+                queue.append(hashed_node)
+                visited[hashed_node] = True
+
+    my_visited_nodes = set(visited.keys())
+#     my_visited_nodes = sorted(list(set(visited.keys())))
+    return my_visited_nodes
 
 
 ##########################
