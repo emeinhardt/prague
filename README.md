@@ -24,7 +24,7 @@ Currently, the key advantages offered by `prague` (over e.g. a homerolled soluti
 ## Status / organization
 The repository is currently practically usable as is (particularly if you have lots of RAM), though there is plenty of room for improvement and additional features.
 
-1. The `data` directory contains two key tab-seprated value files representing two feature systems and speech sound inventories.
+1. The `data` directory contains key tab-seprated value files representing feature systems and speech sound inventories.
 2. The main source directory (`prague`) contains code for 
  - converting tab-separated value files specifying a feature system and object (e.g. speech sound) inventory into a list of dictionaries and ultimately into the ternary NumPy ndarray representations used by everything else.
  - manipulating these ternary vectors and solving problems 1-3 above with practical efficiency for most feature systems and inventories a phonologist is likely to want, provided they have access to a server with say, 20-30 GB of RAM. There is definitely room for improvement in both time and space complexity; this is an ongoing area of development with several promising directions.
@@ -44,6 +44,13 @@ The repository is currently practically usable as is (particularly if you have l
 1. Support for exporting files - or in-memory functionality - for quickly and easily relating a human-readable representation of a partial feature vector and its already-computed extension.
 2. All code so far takes the entire feature matrix as given and works with that, but typical use cases (for phonologists) will only use a fraction of the total object inventory, so support for easily defining and taking relevant projections would be nice.
 3. Another useful direction feature might be adding features to support use with other software that phonological researchers use - e.g. [`Phonological Corpus Tools`](https://corpustools.readthedocs.io) or [`PanPhon`](https://github.com/dmort27/panphon).
+4. CLI, support for usage via `papermill`.
+
+
+**Function Analogues**
+
+1. There are analogues of the three main problems for undirected rewrite rules.
+
 
 **Analysis/Applications**
 
