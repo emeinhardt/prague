@@ -1,6 +1,7 @@
 # prague
 A package for efficiently calculating and storing the extensions of partial feature vectors (a restricted class of Boolean concepts used e.g. in phonology) with respect to a set of observed objects (e.g. speech sounds), and supporting efficient calculation of which partial feature vectors are compatible with a set of observed objects.
 
+
 ## Motivation / context
 The motivating context for the code in this repository is supporting scientific research in computational models of sound patterns in human languages ('phonology').
 
@@ -31,6 +32,7 @@ The repository is currently practically usable as is (particularly if you have l
 3. The `demo` directory contains two Jupyter notebooks outlining use of the two main modules (`prague.convert`, `prague.feature_vector`).
 4. The `scratch` folder contains a variety of exploratory/proof-of-concept notebooks for finding representations and algorithms that are practically efficient for the feature systems used in phonology. Good algorithms and representations have been found (especially if the user has access to a GPU): relevant calculation for the three problems described above currently takes no more than tens of minutes (rather than hours or days) and only needs to be done *once* for a particular feature system. 
 
+
 ## Roadmap of planned features
 
 **Performance**
@@ -51,7 +53,6 @@ The repository is currently practically usable as is (particularly if you have l
 
 1. Slim down the `conda` environment/dependency list.
 2. Make `prague` installable via `pip` and `conda`.
-3. Sort out `pytest`'s inane path snittyness and add instructions to README.
 
 
 **Function Analogues**
@@ -69,9 +70,11 @@ On top of the Compatibility Problem and the Exact Match problem, each of the mot
 3. *Feature predictiveness*: What is the implicative structure of a feature system - in general or for the inventory of a particular language? More preceisely: what does a particular partial assignment of values to features tell you about what the other feature values are more or less likely to be? I.e. given a pmf (prior) *p* over possible object types *O*, what is the *pointwise mutual information* between knowing that a (partially hidden) object (chosen according to *p*) has *k* of its *m* features with particular values and knowing that the rest of its unobserved features have a particular assignment of values?
 4. *Comparison of two feature systems*...w.r.t. either of the previous two problems.
 
+
 ## Requirements
 
 Use of this package requires Python 3, plus installation (via your choice of e.g. `pip` or `conda`) of `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`. Demo notebooks also (non-essentially) make use of `tqdm`.
+
 
 ### Installation / usage
 
@@ -82,6 +85,9 @@ Use of this package requires Python 3, plus installation (via your choice of e.g
 2. Navigate to `prague` (`cd prague` on *nix-like OSs).
 3. Create a `conda` environment with the relevant dependencies via `conda env create -f prague_env.yml` (follow prompts), and then `conda activate prague`.
 4. As long as the repository root directory is on the path/current directory, you should be able to `import prague` as a Python module --- see e.g. the demo notebooks in `prague/demo/`.
+5. If you navigate to the repository root directory (`.../prague/`) and (after setting up an appropriate environment) run `pytest`, you will know if everything has been setup correctly.
+
+
 
 
 ## Why `prague`?
