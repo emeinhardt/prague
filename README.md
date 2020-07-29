@@ -47,6 +47,13 @@ The repository is currently practically usable as is (particularly if you have l
 4. CLI, support for usage via `papermill`.
 
 
+**Installation and Setup**
+
+1. Slim down the `conda` environment/dependency list.
+2. Make `prague` installable via `pip` and `conda`.
+3. Sort out `pytest`'s inane path snittyness and add instructions to README.
+
+
 **Function Analogues**
 
 1. There are analogues of the three main problems for undirected rewrite rules.
@@ -66,8 +73,9 @@ On top of the Compatibility Problem and the Exact Match problem, each of the mot
 
 Use of this package requires Python 3, plus installation (via your choice of e.g. `pip` or `conda`) of `numpy`, `scipy`, `funcy`, and (for development/testing) `pytest`. Demo notebooks also (non-essentially) make use of `tqdm`.
 
-### Painless installation / usage
-I assume you have `conda` installed.
+### Installation / usage
+
+**`conda`**
 
 0. Navigate to a folder of your choice.
 1. `git clone https://github.com/emeinhardt/prague.git`
