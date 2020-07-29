@@ -4,9 +4,11 @@ import pytest
 import numpy as np
 import prague.feature_vector as fv
 
+INT8 = np.int8
 
-a = np.array([-1,  0,  1,  0], dtype=np.int8)
-b = np.array([-1,  1, -1,  0], dtype=np.int8)
+a = np.array([-1,  0,  1,  0], dtype=INT8)
+b = np.array([-1,  1, -1,  0], dtype=INT8)
+
 
 
 lte = fv.lte_specification
@@ -24,7 +26,7 @@ def test_lte_pair():
 lc_a = np.array([[-1,0,1,0],
                  [0,0,1,0],
                  [-1,0,0,0],
-                 [0,0,0,0]],dtype=np.int8)
+                 [0,0,0,0]],dtype=INT8)
 
 uc_a = np.array([[-1,0,1,0],
                  [-1,1,1,0],
@@ -34,7 +36,7 @@ uc_a = np.array([[-1,0,1,0],
                  [-1,1,1,1],
                  [-1,1,1,-1],
                  [-1,-1,1,1],
-                 [-1,-1,1,-1]],dtype=np.int8)
+                 [-1,-1,1,-1]],dtype=INT8)
 
 
 def test_lte_lc():
@@ -60,13 +62,13 @@ def test_lte_lc_stack():
 meet = fv.meet_specification
 
 def test_meet_ab():
-    assert np.array_equal(meet(a,b), np.array([-1, 0, 0, 0], dtype=np.int8))
+    assert np.array_equal(meet(a,b), np.array([-1, 0, 0, 0], dtype=INT8))
 
 def test_meet_ab_vs_M():
     assert np.array_equal(meet(a,b), meet(M=np.array([a,b])))
 
 def test_meet_lca():
-    assert np.array_equal(meet(M=lc_a), np.array([0,0,0,0], dtype=np.int8))
+    assert np.array_equal(meet(M=lc_a), np.array([0,0,0,0], dtype=INT8))
 
 def test_meet_uca():
     assert np.array_equal(meet(M=uc_a), a)
@@ -91,13 +93,13 @@ SFP_exts = [S0p, S0n,
             S1p,
             S2p, S2n,
             S3p, S3n]
-SFP_exts_np = np.array(SFP_exts, dtype=np.int8)
+SFP_exts_np = np.array(SFP_exts, dtype=INT8)
 
 my_S = np.array([[ 1, 0, 0, 0],  #S0p
                  [-1, 0, 0, 0],  #S0n
                  [ 0, 1, 0, 0]], #S1p
-                dtype=np.int8)
-my_S_exts = np.array([S0p, S0n, S1p], dtype=np.int8)
+                dtype=INT8)
+my_S_exts = np.array([S0p, S0n, S1p], dtype=INT8)
 
 ext = fv.extension
 exts = fv.extensions
@@ -109,3 +111,50 @@ def test_SFPs():
 
 def test_SFPs_stack():
     assert np.array_equal(exts(my_S, O), my_S_exts)
+
+
+ternary_pfv_to_trits = fv.ternary_pfv_to_trits
+trits_to_int = fv.trits_to_int
+int_to_trits = fv.int_to_trits
+trits_to_ternary_pfv = fv.trits_to_ternary_pfv
+
+def test_pfv_to_trits():
+    assert np.array_equal(ternary_pfv_to_trits(a), np.array([0,  1,  2,  1], dtype=INT8))
+    assert np.array_equal(ternary_pfv_to_trits(b), np.array([0,  2,  0,  1], dtype=INT8))
+    assert np.array_equal(ternary_pfv_to_trits(np.vstack([a,b])), 
+                          np.array([[0, 1, 2, 1],
+                                    [0, 2, 0, 1]], 
+                                   dtype=INT8))
+
+def test_trits_to_pfv():
+    assert np.array_equal(trits_to_ternary_pfv(np.array([0,  1,  2,  1], dtype=INT8)), 
+                          a)
+    assert np.array_equal(trits_to_ternary_pfv(np.array([0,  2,  0,  1], dtype=INT8)),
+                          b)
+    assert np.array_equal(trits_to_ternary_pfv(np.array([[0, 1, 2, 1], 
+                                                         [0, 2, 0, 1]], 
+                                                        dtype=INT8)), 
+                          np.vstack([a,b]))
+
+# def test_trits_pfv_inverse():
+# #     ternary_pfv_to_trits
+# #     trits_to_ternary_pfv
+#     pass
+
+def test_trits_to_ints():
+    assert trits_to_int(np.array([0,  1,  2,  1], dtype=INT8)) == 16
+    assert trits_to_int(np.array([0,  2,  0,  1], dtype=INT8)) == 19
+    assert np.array_equal(trits_to_int(np.vstack([[0,  1,  2,  1],
+                                                  [0,  2,  0,  1]])), 
+                          np.array([16, 19]))
+
+def test_ints_to_trits():
+    assert np.array_equal(int_to_trits(16, 4), np.array([0,  1,  2,  1], dtype=INT8))
+    assert np.array_equal(int_to_trits(19, 4), np.array([0,  2,  0,  1], dtype=INT8))
+    assert np.array_equal(int_to_trits(np.array([16, 19]), 4), 
+                          np.vstack([[0,  1,  2,  1], [0,  2,  0,  1]]))
+
+# def test_trits_ints_inverse():
+# #     trits_to_ints
+# #     ints_to_trits
+#     pass

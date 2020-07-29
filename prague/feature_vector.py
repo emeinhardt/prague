@@ -50,125 +50,194 @@ def trits_to_ternary_pfv(trits):
     return trits - 1
 
 
-def trits_to_digits(trits):
+#slightly adapted from https://stackoverflow.com/a/20228144
+def int2base(x, base, size=None, order='decreasing', dtype=INT8):
     '''
-    Converts a base-3 array to base-10 in the following sense:
-      [1, 2, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
-    so this function maps
-      [1, 2, 0] => [9, 6, 0]
+    Converts an int (or stack of ints) x in base-10 to an array
+    (or stack of arrays) representing the equivalent in the argument 
+    base.
+    
+    E.g.
+      int2base(43244977933, 10) 
+        => array([4, 3, 2, 4, 4, 9, 7, 7, 9, 3, 3])
+      int2base(43244977933, 3) 
+        => array([1 1 0 1 0 1 2 1 2 1 1 0 0 1 1 1 1 1 0 1 1 0 1])
+      int2base(np.array([53754432896 48908987687]), 3)
+        => array([[1 2 0 1 0 2 0 2 0 2 0 1 1 0 0 1 0 1 0 0 0 0 2]
+                  [1 1 2 0 0 0 2 0 1 1 2 2 2 0 0 0 0 0 0 2 1 0 2]])
+    '''
+    x = np.asarray(x).astype(np.uint64)
+    if size is None:
+        size = int(np.ceil(np.log(np.max(x))/np.log(base)))
+    if order == "decreasing":
+        powers = base ** np.arange(size - 1, -1, -1)
+    else:
+        powers = base ** np.arange(size)
+    digits = (x.reshape(x.shape + (1,)) // powers) % base
+    return digits.astype(dtype)
 
-    (Also converts dtype to np.uint64.)
 
-    If trits has more than one dimension, the last dimension is assumed to be
-    (unbalanced trinary) representation of pfvs.
+# def trits_to_digits(trits):
+#     '''
+#     Converts a base-3 array to base-10 in the following sense:
+#       [1, 2, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
+#     so this function maps
+#       [1, 2, 0] => [9, 6, 0]
 
+#     (Also converts dtype to np.uint64.)
+
+#     If trits has more than one dimension, the last dimension is assumed to be
+#     (unbalanced trinary) representation of pfvs.
+
+#     '''
+#     m = trits.shape[-1]
+#     exponents = np.flip(np.arange(m)).astype(np.uint64)
+#     my_base = 3
+#     powers = np.power(np.array([my_base], dtype=np.uint64),
+#                       exponents)
+#     terms = np.multiply(powers, trits.astype(np.uint64), dtype=np.uint64)
+#     return terms
+
+
+# def digits_to_trits(digits):
+#     '''
+#     Converts a base-10 array to base-3 in the following sense:
+#       [9, 6, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
+#     so this function maps
+#       [9, 6, 0] => [1, 2, 0]
+
+#     (Also converts dtype to np.int8.)
+
+#     If trits has more than one dimension, the last dimension is assumed to be
+#     the digit-based representation of pfvs.
+#     '''
+#     m = digits.shape[-1]
+#     exponents = np.flip(np.arange(m)).astype(np.uint64)
+#     my_base = 3
+#     powers = np.power(np.array([my_base], dtype=np.uint64),
+#                       exponents)
+#     trits = (digits / powers).astype(INT8)
+#     return trits
+
+
+# def digits_to_int(digits, precision=None):
+#     '''
+#     Converts a base-10 array to its corresponding unsigned int in the following
+#     sense:
+#        [9, 6, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
+#        = the trinary number 120
+#     so this function maps
+#       [9, 6, 0] => np.sum([9, 6, 0]) => 15
+
+#     precision defaults to np.uint64.
+
+#     If digits has more than one dimension, the last dimension is assumed to be
+#     the digit-based representation of pfvs.
+#     '''
+#     m = digits.shape[-1]
+#     my_type = np.uint64 if precision is None else precision
+#     if m > MAX_M_FOR_HASHING:
+#         raise Exception(f'Maximum num features supported is m = {MAX_M_FOR_HASHING}!')
+#     base10_int = np.sum(digits.astype(np.uint64), dtype=my_type, axis=-1)
+#     return base10_int
+
+
+# def int_to_digits(i):
+#     '''
+#     When handed a base-10 unsigned 64-bit integer, converts it to an ndarray of np.uint64s
+#     representing the corresponding digits from left to right.
+
+#     Extends in the natural way to stacks of integers:
+#       int_to_digits(np.array([80289929204, 29203]))
+#       => array([[8, 0, 2, 8, 9, 9, 2, 9, 2, 0, 4],
+#                 [0, 0, 0, 0, 0, 0, 2, 9, 2, 0, 3]], dtype=uint64)
+#     '''
+#     #adapted from https://stackoverflow.com/a/51040727
+#     assert not np.any(i < 0), f"i must be >= 0, instead got\n{i}"
+#     if type(i) == type(10):
+#         i = np.array([i], dtype=np.uint64)
+#     else:
+#         i = i.astype(np.uint64)
+#     b = 10                                                   # Base, in our case 10, for 1, 10, 100, 1000, ...
+#     n = np.ceil(np.max(np.log(i) / np.log(b))).astype(int)     # Number of digits
+#     d = np.arange(n)                                         # Divisor base b, b ** 2, b ** 3, ...
+#     d.shape = d.shape + (1,) * (i.ndim)                      # Add dimensions to divisor for broadcasting
+#     out = (i // b ** d % b).astype(np.uint64)
+#     reshaped = np.flip(out.T, axis=-1).astype(INT8)
+#     return reshaped
+
+
+def trits_to_int(trits):
+    '''
+    Converts a vector representing a base-3 (unbalanced trinary) number (or 
+    stack of such vectors) to the corresponding (stack of) base-10 integer(s).
+    
+    E.g.
+      [0 1 2 0] corresponds to 1 x (3²) + 2 x (3¹) + 0 x (3⁰) = 9 + 6 = 15
+    so 
+      trits_to_int(np.array([0, 1, 2, 0])) => 15
+    And 
+      trits_to_int(np.array([[0, 1, 2, 0], [0, 0, 1, 1]])) => np.array([15, 4])
     '''
     m = trits.shape[-1]
     exponents = np.flip(np.arange(m)).astype(np.uint64)
     my_base = 3
     powers = np.power(np.array([my_base], dtype=np.uint64),
                       exponents)
-    terms = np.multiply(powers, trits.astype(np.uint64), dtype=np.uint64)
-    return terms
-
-
-def digits_to_trits(digits):
-    '''
-    Converts a base-10 array to base-3 in the following sense:
-      [9, 6, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
-    so this function maps
-      [9, 6, 0] => [1, 2, 0]
-
-    (Also converts dtype to np.int8.)
-
-    If trits has more than one dimension, the last dimension is assumed to be
-    the digit-based representation of pfvs.
-    '''
-    m = digits.shape[-1]
-    exponents = np.flip(np.arange(m)).astype(np.uint64)
-    my_base = 3
-    powers = np.power(np.array([my_base], dtype=np.uint64),
-                      exponents)
-    trits = (digits / powers).astype(INT8)
-    return trits
-
-
-def digits_to_int(digits, precision=None):
-    '''
-    Converts a base-10 array to its corresponding unsigned int in the following
-    sense:
-       [9, 6, 0] corresponds to [1 x (3²), 2 x (3¹), 0 x (3⁰)]
-       = the trinary number 120
-    so this function maps
-      [9, 6, 0] => np.sum([9, 6, 0]) => 15
-
-    precision defaults to np.uint64.
-
-    If digits has more than one dimension, the last dimension is assumed to be
-    the digit-based representation of pfvs.
-    '''
-    m = digits.shape[-1]
-    my_type = np.uint64 if precision is None else precision
-    if m > MAX_M_FOR_HASHING:
-        raise Exception(f'Maximum num features supported is m = {MAX_M_FOR_HASHING}!')
-    base10_int = np.sum(digits.astype(np.uint64), dtype=my_type, axis=-1)
+#     terms = np.multiply(powers, trits.astype(np.uint64), dtype=np.uint64)
+#     base10_int = np.dot(trits, powers).astype(np.uint64)
+    base10_int = np.matmul(trits.astype(np.uint64), powers, dtype=np.uint64)
     return base10_int
 
 
-def int_to_digits(i):
+def int_to_trits(base10_int, m=None):
     '''
-    When handed a base-10 unsigned 64-bit integer, converts it to an ndarray of np.uint64s
-    representing the corresponding digits from left to right.
-
-    Extends in the natural way to stacks of integers:
-      int_to_digits(np.array([80289929204, 29203]))
-      => array([[8, 0, 2, 8, 9, 9, 2, 9, 2, 0, 4],
-                [0, 0, 0, 0, 0, 0, 2, 9, 2, 0, 3]], dtype=uint64)
+    Converts a base-10 integer (or stack of them) to their equivalent base-3 
+    (unbalanced trinary) representation (or stack of them).
+    
+    E.g. 
+     int_to_trits(43244977933) 
+       => np.array([1 1 0 1 0 1 2 1 2 1 1 0 0 1 1 1 1 1 0 1 1 0 1])
+     int_to_trits(np.array([53754432896, 48908987687])
+       => [[1 2 0 1 0 2 0 2 0 2 0 1 1 0 0 1 0 1 0 0 0 0 2]
+           [1 1 2 0 0 0 2 0 1 1 2 2 2 0 0 0 0 0 0 2 1 0 2]]
+     int_to_trits(16) => np.array([1,  2,  1])
+     int_to_trits(16, m=4) => np.array([0,  1,  2,  1])
     '''
-    #adapted from https://stackoverflow.com/a/51040727
-    assert not np.any(i < 0), f"i must be >= 0, instead got\n{i}"
-    if type(i) == type(10):
-        i = np.array([i], dtype=np.uint64)
-    else:
-        i = i.astype(np.uint64)
-    b = 10                                                   # Base, in our case 10, for 1, 10, 100, 1000, ...
-    n = np.ceil(np.max(np.log(i) / np.log(b))).astype(int)     # Number of digits
-    d = np.arange(n)                                         # Divisor base b, b ** 2, b ** 3, ...
-    d.shape = d.shape + (1,) * (i.ndim)                      # Add dimensions to divisor for broadcasting
-    out = (i // b ** d % b).astype(np.uint64)
-    reshaped = np.flip(out.T, axis=-1).astype(INT8)
-    return reshaped
+    return int2base(base10_int, base=3, size=m)            
 
-def hash_ternary_pfv(pfv, precision=None):
+
+def hash_ternary_pfv(pfv):#, precision=None
     '''
     Converts a balanced ternary pfv to a unique unsigned int corresponding
     to a base-10 representation.
-
-    precision defaults to np.uint64.
     '''
-    trits = ternary_pfv_to_trits(pfv)
+#     precision defaults to np.uint64.
+    return trits_to_int(ternary_pfv_to_trits(pfv))
+#     trits = ternary_pfv_to_trits(pfv)
 
-    #FIXME TODO
-    #the trits_to_digits and digits_to_int calls below could be rewritten to
-    # save on both time and space and just do a dot product...
-    digits = trits_to_digits(trits)
-    del trits
-    my_int = digits_to_int(digits, precision=precision)
-    del digits
-    return my_int
+#     #FIXME TODO
+#     #the trits_to_digits and digits_to_int calls below could be rewritten to
+#     # save on both time and space and just do a dot product...
+#     digits = trits_to_digits(trits)
+#     del trits
+#     my_int = digits_to_int(digits, precision=precision)
+#     del digits
+#     return my_int
 
 
-def decode_hash(hash_int):
+def decode_hash(hash_int, m=None):
     '''
     Converts an unsigned 64-bit integer representing the hash of a balanced
     ternary array back into that array.
     '''
-    digits = int_to_digits(hash_int)
-    trits = digits_to_trits(digits)
-    del digits
-    balanced_ternary_pfv = trits_to_ternary_pfv(trits)
-    del trits
-    return balanced_ternary_pfv
+    return trits_to_ternary_pfv(int_to_trits(hash_int, m=m))
+#     digits = int_to_digits(hash_int)
+#     trits = digits_to_trits(digits)
+#     del digits
+#     balanced_ternary_pfv = trits_to_ternary_pfv(trits)
+#     del trits
+#     return balanced_ternary_pfv
 
 
 ###########
