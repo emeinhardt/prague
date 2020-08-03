@@ -58,6 +58,18 @@ def cartesian_product_stack(stack_a, stack_b):
     return left, right
 
 
+def prefixes(arr):
+    '''
+    Given an array (or stack), returns the 'prefixes' along the first dimension:
+    Ex: Given
+        x = np.array([0,1,2])
+    then
+        prefixes(x)
+        => (array([]), array([0]), array([0,1]), array([0,1,2]))
+    '''
+    return tuple([arr[:-(arr.shape[0]-i)] for i in np.arange(arr.shape[0])] + [arr])
+
+
 #################################
 # HASHING BALANCED TERNARY PFVS #
 #################################
@@ -1044,6 +1056,54 @@ def lower_closure_BFE(x, object_inventory=None, prev_pfvs=None):
     my_visited_nodes = set(visited.keys())
 #     my_visited_nodes = sorted(list(set(visited.keys())))
     return my_visited_nodes
+
+
+def gather_all_pfvs_with_nonempty_extension(object_inventory, method='eager_filter'):
+    '''
+    Given an n x m matrix of pfvs specifying an object inventory with n objects
+    and m features together with a string specifying a calculation method (one
+    of 'eager_filter', 'unique_hash', or 'np.unique'), returns the set of unique
+    pfvs in the relevant specification semilattice guaranteed to have non-empty
+    extension.
+
+    No guarantee is given on the ordering of elements.
+
+    Relative time complexity is: eager_filter << unique_hash <<< np.unique.
+    Peak memory usage is very high for both unique hash and np.unique.
+    Relative peak memory usage for eager_filter is unknown at present #FIXME.
+
+    unique_hash and np.unique both independently generate the lower closure of
+    every pfv in object_inventory and then use different methods to uniquify the
+    resulting matrix of pfvs. Peak memory usage (at least) just prior to
+    uniquifying is high as a result.
+
+    eager_filter passes information about what other pfvs a lower closure has
+    been computed for to each call to lower_closure(x) and then uses that to
+    eagerly filter the full ↓x. This could be further optimized by choosing an
+    optimal ordering on elements of the object inventory to minimize wasted
+    redundancy checking/filtering computation or by avoiding generation of
+    redundant elements altogether.
+    '''
+    assert method in {'eager_filter', 'unique_hash', 'np.unique'}
+
+    if method == 'eager_filter':
+        prefixes_O = prefixes(object_inventory)
+        lower_closures = [lower_closure(o, prev_pfvs=prefixes_O[i])
+                          for i,o in enumerate(object_inventory)]
+        del prefixes_O
+        lc_mat = np.concatenate(lower_closures)
+        del lower_closures
+        return lc_mat
+    else:
+        lower_closures = [lower_closure(o) for o in object_inventory]
+        lc_mat = np.concatenate(lower_closures)
+        del lower_closures
+        if method == 'np.unique':
+            return np.unique(lc_mat, return_index=False, axis=0)
+        else:
+            lc_set = set(hash_ternary_pfv(lc_mat))
+            lc_unhashed = decode_hash(np.array(tuple(lc_set), dtype=INT8))
+            return lc_unhashed
 
 
 ##########################
