@@ -37,7 +37,7 @@ The repository is currently practically usable as is (particularly if you have l
 
 **Performance**
 
-1. There's a lot of room for improving the space efficiency of current functions for solving the Enumeration Problem. This is the highest priority right now. The benchmark for feasibility is the enumeration problem on the full `hayes.tsv` feature set and inventory (about 30 and 285 after deduplication, respectively); with room for algorithmic improvement, peak memory usage is >=90GB and time >>10 minutes.
+1. There's a lot of room for improving the space efficiency of current functions for solving the Enumeration Problem. This is the highest priority right now. The benchmark for feasibility is the enumeration problem on the full `hayes.tsv` feature set and inventory (about 30 and 285 after deduplication, respectively): if this is reasonabily feasible, then few other more practical problems will present any problem at all. Unfortunately, while there's room for algorithmic improvement, peak memory usage is currently >=90GB and time >>10 minutes.
 2. Depending on whether the user has lots of RAM, lots of cores, or access to a GPU, it would be nice to have multiple implementations of core functions for solving the three key problems mentioned above and some way of letting the user choose among them.
 
 
