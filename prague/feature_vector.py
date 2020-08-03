@@ -1104,8 +1104,8 @@ def gather_all_pfvs_with_nonempty_extension(object_inventory, method='eager_filt
             # lc_set = set(lmap(HashableArray,
                               # list(lc_mat)))
         else:
-            lc_set = set(hash_ternary_pfv(lc_mat))
-            lc_unhashed = decode_hash(np.array(tuple(lc_set), dtype=INT8))
+            lc_unhashed = decode_hash(np.array(tuple(set(hash_ternary_pfv(lc_mat))), 
+                                               dtype=INT8))
             return lc_unhashed
 
 
