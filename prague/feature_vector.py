@@ -1100,6 +1100,9 @@ def gather_all_pfvs_with_nonempty_extension(object_inventory, method='eager_filt
         del lower_closures
         if method == 'np.unique':
             return np.unique(lc_mat, return_index=False, axis=0)
+        # elif method == 'hashable_array': #takes the same amount of time as np.unique
+            # lc_set = set(lmap(HashableArray,
+                              # list(lc_mat)))
         else:
             lc_set = set(hash_ternary_pfv(lc_mat))
             lc_unhashed = decode_hash(np.array(tuple(lc_set), dtype=INT8))

@@ -21,6 +21,7 @@ from prague.feature_vector import meet_specification as meet
 from prague.feature_vector import upper_closure, lower_closure
 from prague.feature_vector import lower_closure_BFE
 from prague.feature_vector import get_children, get_parents
+from prague.feature_vector import gather_all_pfvs_with_nonempty_extension
 
 from prague.feature_vector import objects_to_extension_vector, extension_vector_to_objects
 from prague.feature_vector import extension, extensions
