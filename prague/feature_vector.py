@@ -19,6 +19,45 @@ import collections
 INT8 = np.int8
 
 
+################
+# VECTOR ABUSE #
+################
+
+
+#from https://stackoverflow.com/a/11146645
+def cartesian_product(*arrays):
+    '''
+    Given n one dimensional vectors, construct their cartesian product analogue.
+    '''
+    la = len(arrays)
+    dtype = np.result_type(*arrays)
+    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(np.ix_(*arrays)):
+        arr[...,i] = a
+    return arr.reshape(-1, la)
+
+
+def cartesian_product_stack(stack_a, stack_b):
+    '''
+    Given two stacks of vectors (n x a and m x b), returns two stacks of
+    vectors (n x m x a, n x m x b) where the pair of vectors at row i of each
+    stack represents an element of the cartesian product of the input stacks of
+    vectors.
+    '''
+    n, a = stack_a.shape
+    m, b = stack_b.shape
+    # n = stack_a.shape[0]
+    # m = stack_b.shape[0]
+    left = np.repeat(stack_a, m, axis=0)
+    right = np.tile(stack_b, (n, 1))
+    assert left.shape[0] == n*m, f"left shape 0th dimension should be n*m={n*m}, but instead is {left.shape[0]}"
+    assert right.shape[0] == n*m, f"right shape 0th dimension should be n*m={n*m}, but instead is {right.shape[0]}"
+    # return left, right
+    left  = np.reshape(left,  (n,m,a))
+    right = np.reshape(right, (n,m,b))
+    return left, right
+
+
 #################################
 # HASHING BALANCED TERNARY PFVS #
 #################################
@@ -636,6 +675,23 @@ def lte_specification_stack_right(u, M, axis=1):
     return (np.equal(M, u) | np.equal(u, 0)).prod(axis=axis, dtype=INT8)
 
 
+def lte_specification_dagwood(M, U, axis=2):
+    '''
+    Given two stacks of partial feature vectors M::(l,m), U::(o,m),
+    this returns a matrix R::(l,o) where
+        R[i,j] == 1  iff  M[i] ≤ U[j]
+
+    In other words, this is the natural 'stack' version of
+        lte_specification_stack_right
+    or equivalently, an efficient version of
+        R = np.array([[prague.lte(row, col) for col in U]
+                      for row in M], dtype=np.int8)
+    '''
+    cart_prod_arr = np.array(cartesian_product_stack(M,U), dtype=INT8)
+    result = (np.equal(cart_prod_arr[0,:,:],cart_prod_arr[1,:,:]) | np.equal(cart_prod_arr[0,:,:], 0)).prod(axis=2, dtype=INT8)
+    return result
+
+
 def meet_specification(u=None, v=None, M=None):
     '''Given two partial feature vectors u,v, returns the unique single partial
     feature vector that is the greatest lower bound of u and v in the
@@ -817,7 +873,7 @@ def n_choose_at_most_k_indices(n, k, asMask=True):
     return mask
 
 
-def lower_closure(x, strict=False):
+def lower_closure(x, strict=False, prev_pfvs=None):
     '''The lower closure ↓x of a pfv x is the set of (optionally strictly) less
     specified vectors. If X is the set of all partially specified feature
     vectors, then
@@ -830,8 +886,16 @@ def lower_closure(x, strict=False):
     If m is the total number of features that could be specified, then there
     are O(𝚺_i=1^i=m m choose i) elements in this set.
 
-    If k ≤ m is the exact number of features that are specified in pfv x, then
-    there are exactly (𝚺_i=1^i=k k choose i) = 2^k elements in this set.
+    If k ≤ m is the exact number of features that are despecifiable in pfv x,
+    then there are exactly (𝚺_i=1^i=k k choose i) = 2^k elements in this set.
+
+    If prev_pfvs != None, then
+     - it must be an N x m matrix (N ≥ 1)
+     - no part of ↓x that overlaps with the lower closure of any pfv in
+       prev_will be constructed here
+         - Actually, for now they're just eagerly filtered out.
+    (This is useful for avoiding redundant computation when constructing sets
+    of lower closures.)
     '''
     specified_indices = x.nonzero()[0]
     k = len(specified_indices)
@@ -854,14 +918,68 @@ def lower_closure(x, strict=False):
                                obj = unspecified_indices - offsets,
                                values = 0, #0s go in the indices whose specification won't be changed
                                axis = 1)   #masks are stacked vertically
+    del combinations_of_indices_to_unspecify
+    del offsets
+    del unspecified_indices
+    del specified_indices
+    del k
+
+    if prev_pfvs is not None and prev_pfvs.shape[0] != 0:
+        meets = meet_specification(x, prev_pfvs) #one meet per row of prev_pfvs
+
+        #reduce meets to minimal subset...
+        #...by first eliminating meets that are exact matches of other meets...
+        unique_meets = np.flip(np.unique(meets, axis=0), axis=0)
+        del meets
+        #...and then eliminating meets that contain no information not captured
+        # by other unique meets
+        #...by calculating whether each meet ≤ any meet in meets
+        lte_meets_product = lte_specification_dagwood(unique_meets, unique_meets)
+        #...then identifying which meets are only ≤ just one meet (viz. themselves)
+        mask_meets_that_are_not_lte_another_meet = lte_meets_product.sum(axis=1) == 1
+        del lte_meets_product
+        #...and only using these meets
+        reduced_meets = unique_meets[mask_meets_that_are_not_lte_another_meet]
+        del mask_meets_that_are_not_lte_another_meet
+        del unique_meets
+        #Motivating example:
+        #Suppose a = [1,1,1], prev_pfvs = [c,g] where
+        #        c = [1,-1,1] and g = [-1,-1,1]
+        #
+        #Since meet(a,c) = [1,0,1] and meet(a,g) = [0,0,1]
+        # and meet(a,g) ≤ meet(a,c), filtering out meet(a,c) from ↓a
+        # means meet(a,c) has *already been* filtered out
+
+        #FIXME use meet_diff_masks to filter out selection_mask
+#         del prev_pfvs
+
+#         meet_diff_masks = diff_mask(x, reduced_meets)
+
+#         del reduced_meets
 
     #By negating the selection mask, we get a stack of vectors that each have
     # 0s where we want to erase (unspecify) a value.
     eraser_mask = np.logical_not(selection_mask).astype(INT8)
+    del selection_mask
 
     my_lower_closure = (x * eraser_mask).astype(INT8)
+    del eraser_mask
+
     if strict:
         my_lower_closure = my_lower_closure[1:] #pop first element (==x)
+
+    if prev_pfvs is not None and prev_pfvs.shape[0] != 0:
+#         print(f"reduced_meets = {reduced_meets}")
+        lte_lc_and_meets = lte_specification_dagwood(my_lower_closure, reduced_meets)
+#         print(f"lte_lc_and_meets = {lte_lc_and_meets}")
+        mask_lc_elements_not_lte_any_meet = lte_lc_and_meets.sum(axis=1) == 0
+#         print(f"mask_lc_elements_not_lte_any_meet.shape = {mask_lc_elements_not_lte_any_meet.shape}")
+#         print(f"mask_lc_elements_not_lte_any_meet = {mask_lc_elements_not_lte_any_meet}")
+        del lte_lc_and_meets
+        my_lower_closure = my_lower_closure[mask_lc_elements_not_lte_any_meet]
+        del mask_lc_elements_not_lte_any_meet
+        del reduced_meets
+
     return my_lower_closure
 
 
