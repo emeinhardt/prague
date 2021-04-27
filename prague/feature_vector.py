@@ -724,6 +724,61 @@ def meet_specification(u=None, v=None, M=None):
     else:
         raise Exception('Provide exactly two vectors u,v or else a stack M.')
 
+        
+def specification_degree(u=None, M=None):
+    '''
+    Given a pfv u or a stack of pfvs M, calculate the degree(s) of 
+    specification.
+    
+    Ex: If
+     a = np.array([-1,0,1], dtype=np.int8)
+     b = np.array([-1,0,0], dtype=np.int8)
+     c = np.array([a,b], dtype=np.int8)
+    then
+     specification_degree(a) == 2
+     specification_degree(b) == 1
+     specifcation_degree(M=c) == np.array([2,1])
+    '''
+    if u is not None:
+        return np.abs(u).sum()
+    elif M is not None:
+        return np.abs(M).sum(axis=-1)
+    else:
+        raise Exception("Provide a vector as argument u or a stack of vectors as M.")
+
+def minimally_specified(M):
+    '''
+    Given a stack of pfvs M, returns the pfvs whose specification is minimal 
+    relative to other pfvs in M.
+    
+    Ex: If
+     a = np.array([-1,0,1], dtype=np.int8)
+     b = np.array([-1,0,0], dtype=np.int8)
+     c = np.array([a,b], dtype=np.int8)
+    then
+     minimally_specified(c) == np.array([[-1,0,0]])
+    '''
+    specs = specification_degree(M=M)
+    spec_min = np.min(specs)
+    return M[specs == spec_min]
+
+
+def maximally_specified(M):
+    '''
+    Given a stack of pfvs M, returns the pfvs whose specification is maximal 
+    relative to other pfvs in M.
+    
+    Ex: If
+     a = np.array([-1,0,1], dtype=np.int8)
+     b = np.array([-1,0,0], dtype=np.int8)
+     c = np.array([a,b], dtype=np.int8)
+    then
+     maximally_specified(c) == np.array([[-1,0,1]])
+    '''
+    specs = specification_degree(M=M)
+    spec_max = np.max(specs)
+    return M[specs == spec_max]
+
 
 ############################################################
 # GENERATING THE LOWER CLOSURE OF A PARTIAL FEATURE VECTOR #
