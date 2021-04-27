@@ -623,7 +623,7 @@ def left_inv_priority_union(a,c):
     '''
     #TODO clean this up, replace for loop + insertion with matrix construction 
     # and multiplication
-    assert c.shape[-1] == b.shape[-1], "the last dimension of b and c (the number of features) must be the same."
+    assert a.shape[-1] == c.shape[-1], "the last dimension of a and c (the number of features) must be the same."
     m = c.shape[-1]
     plusZero  = np.array([+1,0], dtype=np.int8)
     minusZero = np.array([-1,0], dtype=np.int8)
