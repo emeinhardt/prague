@@ -277,7 +277,7 @@ def from_feature_dict(d, feature_seq):
     '''
     value_map = {'0':0, '-':-1, '+':1}
     value_mapping = lambda v: value_map[v]
-    return np.array([value_mapping(d[f]) for f in feature_seq], dtype=INT8)
+    return np.array([value_mapping(d[f]) if f in d else 0 for f in feature_seq], dtype=INT8)
 
 
 def to_feature_dict(feature_seq, u, value_map=None):
