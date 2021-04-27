@@ -463,6 +463,78 @@ def load_object_vectors(filepath):
 
 
 ######################################
+# Converting between representations #
+######################################
+
+
+def symbol_to_feature_vector(s, objectsAsDicts, objectsAsPFVs):
+    '''
+    Given 
+     - a canonical sequence of objects as dicts
+     - a canonical sequence of objects as pfvs with a matched ordering
+    
+    this function maps a symbol s to a pfv.
+    '''
+    mapping = {o['symbol']:objectsAsPFVs[i]
+               for i,o in enumerate(objectsAsDicts)}
+    return mapping[s]
+
+
+def feature_vector_to_symbols(fv, objectsAsDicts, objectsAsPFVs):
+    '''
+    Given 
+     - a canonical sequence of objects as dicts
+     - a canonical sequence of objects as pfvs with a matched ordering
+    
+    this function maps a pfv to the set of symbols that match it.
+    '''
+    unique_objects_np = np.unique(objectsAsPFVs, axis=0)
+    symbol_to_fv = {o['symbol']:objectsAsPFVs[i]
+                    for i,o in enumerate(objectsAsDicts)}
+    fv_to_symbols_map = {HashableArray(fv):{s for s in symbol_to_fv
+                                            if np.array_equal(fv, symbol_to_fv[s])}
+                         for fv in unique_objects_np}
+    return fv_to_symbols_map[HashableArray(fv)]
+
+
+def extension_to_symbols(ext, objectsAsDicts, objectsAsPFVs):
+    '''
+    Given 
+     - an extension vector for some dict or pfv
+     - an aligned sequence of objects as dictionaries
+     - an aligned stack of pfvs
+    
+    this returns the set of symbols that have extension=ext.
+    '''
+    unique_objects_np = np.unique(objectsAsPFVs, axis=0)
+    index_to_symbols = [feature_vector_to_symbols(fv, objectsAsDicts, objectsAsPFVs) 
+                        for fv in unique_objects_np]
+    return np.array(index_to_symbols)[extension.nonzero()[0]]
+    
+
+def symbol_to_feature_dict(symbol, objectsAsDicts):
+    '''
+    Given 
+     - a symbol 
+     - a sequence of objects as dictionaries
+    
+    this returns a sequence of dicts that match symbol.
+    '''
+    return [fd for fd in objectsAsDicts if fd['symbol'] == symbol]
+    
+    
+def pfv_to_fd(pfv, feature_list):
+    '''
+    Given
+     - a pfv
+     - an aligned sequence listing features
+    
+    this returns a feature dictionary for the pfv.
+    '''
+    return to_feature_dict(feature_list, pfv)
+
+
+######################################
 # PFV DIFFERENCE AND SPE-STYLE RULES #
 ######################################
 
