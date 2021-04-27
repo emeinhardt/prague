@@ -526,6 +526,161 @@ def despec(u, indices):
     return composable_put(u, indices, 0)
 
 
+def priority_union(a,b):
+    '''
+    Treating pfvs as partial functions from feature labels or indices to the 
+    Booleans, this computes the right priority union of a and b:
+      a + b = c
+    where
+      c_i = a_i  if a_i ≠ 0
+            b_i  otherwise
+    '''
+    return spe_update(a,b)
+
+
+def right_inv_priority_union(c,b):
+    '''
+    Let + denote right priority union, where for some unknown pfv a
+      a + b = c
+    
+    If / denotes 'right_inv_priority_union' = the right inverse of right 
+    priority union, then 
+      c / b = { a | a + b = c }
+    where a,b,c are all ternary pfvs.
+    
+    At the pointwise/ternary value level,
+      x / 0 = {x}
+      x / x = {+, 0, -}
+    In other words, the only case where '(c,b)' can be informative about 'a'
+    is when 'b' is 0, in which case a=c.
+    '''
+    #TODO clean this up, replace for loop + insertion with matrix construction 
+    # and multiplication
+    assert c.shape[-1] == b.shape[-1], "the last dimension of b and c (the number of features) must be the same."
+    m = c.shape[-1]
+    allValues = np.array([+1,0,-1], dtype=np.int8)
+#     print(f"c={c}")
+#     print(f"b={b}")
+    
+    whereBIsNonZero = (b != 0)
+    bNonZero_count  = l = np.count_nonzero(b)
+    whereBIsZero    = (b == 0)
+    if np.all(whereBIsZero):
+        return c.copy()
+    bZero_count     = k = m - bNonZero_count
+#     print(f"l={l}\nk={k}")
+    
+    stableValuesFromC = c*whereBIsZero
+#     print(f"stableValuesFromC={stableValuesFromC}")
+    
+    #if there are k <= m    indices where b is     0, then
+    #   there are l = m - k indices where b is NOT 0
+    # and we will need 3^k pfvs
+#     result_shape = (3**bNonZero_count, m)
+    result = np.tile(stableValuesFromC, [3**l,1])
+#     print(f"result=\n{result}")
+
+    filler_columns = [allValues for each in range(bNonZero_count)]
+    filler_matrix  = cartesian_product(*filler_columns) # shape = (3^l, k)
+#     print(f"filler_matrix=\n{filler_matrix}")
+    
+    index_to_insert_column    = whereBIsNonZero.nonzero()[0]
+    index_of_column_to_insert = np.arange(filler_matrix.shape[-1])
+    zipped                    = np.vstack([index_to_insert_column, index_of_column_to_insert])
+#     print(f"zipped=\n{zipped}")
+    
+    for each in zipped.T:
+        index_for_insertion = each[0]
+        index_to_insert     = each[1]
+        result[:, index_for_insertion] = filler_matrix[:,index_to_insert]
+#     print(f"result=\n{result}")
+    
+#     for a_prime in result:
+#         actual_c = prague.priority_union(a_prime, b)
+#         assert np.array_equal(actual_c, c), f"{a_prime} + {b} = {actual_c} ≠ {c}"
+    
+    return result
+
+
+def left_inv_priority_union(a,c):
+    '''
+    Let + denote right priority union, where for some unknown pfv b
+      a + b = c
+    
+    If \ denotes 'left_inv_priority_union' = the left inverse of right 
+    priority union, then 
+      a \ c = { b | a + b = c }
+    where a,b,c are all ternary pfvs.
+    
+    At the pointwise/ternary value level,
+      0 \ x        = {x}
+      x \ y, y ≠ x = {y}
+      x \ x        = {x, 0}
+    In other words, 
+      a = 0         -> b = c
+      a ≠ 0 ∧ a ≠ c -> b = c
+      a ≠ 0 ∧ a = c -> b = c ∨ 0
+    '''
+    #TODO clean this up, replace for loop + insertion with matrix construction 
+    # and multiplication
+    assert c.shape[-1] == b.shape[-1], "the last dimension of b and c (the number of features) must be the same."
+    m = c.shape[-1]
+    plusZero  = np.array([+1,0], dtype=np.int8)
+    minusZero = np.array([-1,0], dtype=np.int8)
+#     print(f"a={a}")
+#     print(f"c={c}")
+    
+    whereAIsZero    = a == 0
+#     print(f"whereAIsZero=\n{whereAIsZero}")
+    if np.all(whereAIsZero):
+        return c.copy()
+    whereAIsNonZero = a != 0
+    whereANeqC      = a != c
+#     print(f"whereAIsNonZero && whereANeqC=\n{(whereAIsNonZero & whereANeqC)}")
+    whereAEqC       = a == c
+#     print(f"whereAIsNonZero && whereAEqC=\n{(whereAIsNonZero & whereAEqC)}")
+    
+    bInheritedFromC = c*(whereAIsZero | (whereAIsNonZero & whereANeqC))
+#     print(f"bInheritedFromC={bInheritedFromC}")
+    
+    bIsCOrZero        = whereAIsNonZero & whereAEqC
+    cIsPlus           = c == +1
+    cIsMinus          = c == -1
+    numVaryingIndices = k = np.count_nonzero(bIsCOrZero)
+    if k == 0:
+        return bInheritedFromC
+#     print(f"bIsCOrZero={bIsCOrZero}")
+    insertPlusZero    = bIsCOrZero & cIsPlus
+    insertMinusZero   = bIsCOrZero & cIsMinus
+#     print(f"insertPlusZero={insertPlusZero}")
+#     print(f"insertMinusZero={insertMinusZero}")
+#     print(f"numVaryingIndices={k}")
+    
+    result = np.tile(bInheritedFromC, [2**k,1])
+#     print(f"result=\n{result}")
+
+    filler_columns = [plusZero if insertPlusZero[i] else minusZero for i in range(m) if insertPlusZero[i] or insertMinusZero[i]]
+    filler_matrix  = cartesian_product(*filler_columns)# if not np.all(b == 0) else None # shape = (2^k, 1)
+#     print(f"filler_matrix=\n{filler_matrix}")
+    
+    index_to_insert_column    = bIsCOrZero.nonzero()[0]
+    index_of_column_to_insert = np.arange(filler_matrix.shape[-1])
+    zipped                    = np.vstack([index_to_insert_column, index_of_column_to_insert])
+#     print(f"zipped=\n{zipped}")
+    
+    for each in zipped.T:
+        index_for_insertion = each[0]
+        index_to_insert     = each[1]
+        result[:, index_for_insertion] = filler_matrix[:,index_to_insert]
+#     print(f"result=\n{result}")
+    
+#     for b_prime in result:
+#         actual_c = prague.priority_union(a, b_prime)
+#         assert np.array_equal(actual_c, c), f"{a} + {b_prime} = {actual_c} ≠ {c}"
+    
+    return result
+
+
 def spe_update(a, b, object_inventory=None):
     '''
     Coerces a to reflect what's specified in b (per an SPE-style unconditioned
