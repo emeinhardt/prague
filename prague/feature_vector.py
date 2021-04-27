@@ -282,7 +282,8 @@ def from_feature_dict(d, feature_seq):
 
 def to_feature_dict(feature_seq, u, value_map=None):
     '''
-    Given a sequence of features, creates an equivalent feature dictionary.
+    Given a sequence of features and a pfv u, creates an equivalent feature 
+    dictionary.
     Assumes feature_seq is ordered appropriately relative to u.
 
     If value_map is None, the default (0->'0', 1->'+', -1->'-') will be used.
@@ -461,9 +462,9 @@ def load_object_vectors(filepath):
     return np.load(filepath)
 
 
-##################
-# PFV DIFFERENCE #
-##################
+######################################
+# PFV DIFFERENCE AND SPE-STYLE RULES #
+######################################
 
 
 def hamming(u,v):
@@ -764,6 +765,21 @@ def spe_update(a, b, object_inventory=None):
 #             return np.vstack(reachable_pfvs)
 #         k+=1
 #     raise Exception('wtf: no coercible vector within edit distance {k} that maintains {b}')
+
+
+def make_rule(target, change):
+    '''
+    Returns a function that behaves like an unconditioned SPE-style rewrite
+    rule 
+      target → change
+    '''
+    assert target.shape[0] == change.shape[0], f"Shape mismatch: {target.shape} vs. {change.shape}"
+    def phi(v):
+        if lte(target, v):
+            return priority_union(v, change)
+        else:
+            return v
+    return phi
 
 
 #############################
