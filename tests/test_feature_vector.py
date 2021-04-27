@@ -158,3 +158,18 @@ def test_ints_to_trits():
 # #     trits_to_ints
 # #     ints_to_trits
 #     pass
+
+all3Vecs = np.array([[x,y,z] for x in {+1, 0,-1} 
+                             for y in {+1, 0,-1} 
+                             for z in {+1, 0,-1}], dtype=INT8)
+
+all3VecIO = [(a,b,fv.priority_union(a,b)) for a in all3Vecs for b in all3Vecs]
+
+def test_priority_union_left_inverse():
+    for i,(a,b,c) in enumerate(all3VecIO):
+        assert b in fv.left_inv_priority_union(a=a,c=c),  f"{i}:{a},{b},{c}"
+            
+def test_priority_union_right_inverse():
+    for i,(a,b,c) in enumerate(all3VecIO):
+        assert a in fv.right_inv_priority_union(c=c,b=b), f"{i}:{a},{b},{c}"
+            
