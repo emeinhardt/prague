@@ -18,6 +18,9 @@ from prague.feature_vector import lte_specification_stack_left as lte_stack_left
 from prague.feature_vector import lte_specification_stack_right as lte_stack_right
 from prague.feature_vector import lte_specification as lte
 from prague.feature_vector import meet_specification as meet
+from prague.feature_vector import specification_degree as spec
+from prague.feature_vector import minimally_specified as min_spec
+from prague.feature_vector import maximally_specified as max_spec
 from prague.feature_vector import upper_closure, lower_closure
 from prague.feature_vector import lower_closure_BFE
 from prague.feature_vector import get_children, get_parents
@@ -30,4 +33,6 @@ from prague.feature_vector import get_pfvs_whose_extension_is_exactly
 
 
 from prague.feature_vector import hamming, delta_right, delta_down
-from prague.feature_vector import linear_transform, despec, spe_update
+from prague.feature_vector import linear_transform, despec, spe_update, priority_union
+from prague.feature_vector import left_inv_priority_union as left_inv
+from prague.feature_vector import right_inv_priority_union as right_inv
