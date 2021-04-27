@@ -6,8 +6,8 @@ import prague.feature_vector as fv
 
 INT8 = np.int8
 
-a = np.array([-1,  0,  1,  0], dtype=INT8)
-b = np.array([-1,  1, -1,  0], dtype=INT8)
+a = np.array([-1, 0,+1, 0], dtype=INT8)
+b = np.array([-1,+1,-1, 0], dtype=INT8)
 
 
 
@@ -23,20 +23,20 @@ def test_lte_pair():
     assert not lte(b,a)
 
 
-lc_a = np.array([[-1,0,1,0],
-                 [0,0,1,0],
-                 [-1,0,0,0],
-                 [0,0,0,0]],dtype=INT8)
+lc_a = np.array([[-1, 0,+1, 0],
+                 [0 , 0,+1, 0],
+                 [-1, 0, 0, 0],
+                 [0 , 0, 0, 0]],dtype=INT8)
 
-uc_a = np.array([[-1,0,1,0],
-                 [-1,1,1,0],
-                 [-1,-1,1,0],
-                 [-1,0,1,1],
-                 [-1,0,1,-1],
-                 [-1,1,1,1],
-                 [-1,1,1,-1],
-                 [-1,-1,1,1],
-                 [-1,-1,1,-1]],dtype=INT8)
+uc_a = np.array([[-1, 0,+1, 0],
+                 [-1,+1,+1, 0],
+                 [-1,-1,+1, 0],
+                 [-1, 0,+1,+1],
+                 [-1, 0,+1,-1],
+                 [-1,+1,+1,+1],
+                 [-1,+1,+1,-1],
+                 [-1,-1,+1,+1],
+                 [-1,-1,+1,-1]],dtype=INT8)
 
 
 def test_lte_lc():
@@ -119,20 +119,20 @@ int_to_trits = fv.int_to_trits
 trits_to_ternary_pfv = fv.trits_to_ternary_pfv
 
 def test_pfv_to_trits():
-    assert np.array_equal(ternary_pfv_to_trits(a), np.array([0,  1,  2,  1], dtype=INT8))
-    assert np.array_equal(ternary_pfv_to_trits(b), np.array([0,  2,  0,  1], dtype=INT8))
+    assert np.array_equal(ternary_pfv_to_trits(a), np.array([0,1,2,1], dtype=INT8))
+    assert np.array_equal(ternary_pfv_to_trits(b), np.array([0,2,0,1], dtype=INT8))
     assert np.array_equal(ternary_pfv_to_trits(np.vstack([a,b])), 
-                          np.array([[0, 1, 2, 1],
-                                    [0, 2, 0, 1]], 
+                          np.array([[0,1,2,1],
+                                    [0,2,0,1]], 
                                    dtype=INT8))
 
 def test_trits_to_pfv():
-    assert np.array_equal(trits_to_ternary_pfv(np.array([0,  1,  2,  1], dtype=INT8)), 
+    assert np.array_equal(trits_to_ternary_pfv(np.array([0,1,2,1], dtype=INT8)), 
                           a)
-    assert np.array_equal(trits_to_ternary_pfv(np.array([0,  2,  0,  1], dtype=INT8)),
+    assert np.array_equal(trits_to_ternary_pfv(np.array([0,2,0,1], dtype=INT8)),
                           b)
-    assert np.array_equal(trits_to_ternary_pfv(np.array([[0, 1, 2, 1], 
-                                                         [0, 2, 0, 1]], 
+    assert np.array_equal(trits_to_ternary_pfv(np.array([[0,1,2,1], 
+                                                         [0,2,0,1]], 
                                                         dtype=INT8)), 
                           np.vstack([a,b]))
 
@@ -142,17 +142,17 @@ def test_trits_to_pfv():
 #     pass
 
 def test_trits_to_ints():
-    assert trits_to_int(np.array([0,  1,  2,  1], dtype=INT8)) == 16
-    assert trits_to_int(np.array([0,  2,  0,  1], dtype=INT8)) == 19
-    assert np.array_equal(trits_to_int(np.vstack([[0,  1,  2,  1],
-                                                  [0,  2,  0,  1]])), 
+    assert trits_to_int(np.array([0,1,2,1], dtype=INT8)) == 16
+    assert trits_to_int(np.array([0,2,0,1], dtype=INT8)) == 19
+    assert np.array_equal(trits_to_int(np.vstack([[0,1,2,1],
+                                                  [0,2,0,1]])), 
                           np.array([16, 19]))
 
 def test_ints_to_trits():
-    assert np.array_equal(int_to_trits(16, 4), np.array([0,  1,  2,  1], dtype=INT8))
-    assert np.array_equal(int_to_trits(19, 4), np.array([0,  2,  0,  1], dtype=INT8))
+    assert np.array_equal(int_to_trits(16, 4), np.array([0,1,2,1], dtype=INT8))
+    assert np.array_equal(int_to_trits(19, 4), np.array([0,2,0,1], dtype=INT8))
     assert np.array_equal(int_to_trits(np.array([16, 19]), 4), 
-                          np.vstack([[0,  1,  2,  1], [0,  2,  0,  1]]))
+                          np.vstack([[0,1,2,1], [0,2,0,1]]))
 
 # def test_trits_ints_inverse():
 # #     trits_to_ints
