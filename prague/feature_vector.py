@@ -405,6 +405,13 @@ def wf_tfv(v):
 # Construction of partial feature vectors and sets and objects #
 ################################################################
 
+def make_zero_pfv(num_features):
+    '''Returns the vector of length m = num_features of only zeros.
+    
+    Return type is an ndarray.
+    '''
+    return np.zeros((num_features,),dtype=INT8)
+
 
 def make_random_pfv(num_features):
     '''Returns a random partial feature vector with num_features features.
