@@ -503,7 +503,8 @@ def feature_vector_to_symbols(fv, objectsAsDicts, objectsAsPFVs):
     symbol_to_fv = {o['symbol']:objectsAsPFVs[i]
                     for i,o in enumerate(objectsAsDicts)}
     fv_to_symbols_map = {HashableArray(fv):{s for s in symbol_to_fv
-                                            if np.array_equal(fv, symbol_to_fv[s])}
+                                            if np.array_equal(fv, 
+                                                              symbol_to_fv[s])}
                          for fv in unique_objects_np}
     return fv_to_symbols_map[HashableArray(fv)]
 
@@ -518,7 +519,9 @@ def extension_to_symbols(ext, objectsAsDicts, objectsAsPFVs):
     this returns the set of symbols that have extension=ext.
     '''
     unique_objects_np = np.unique(objectsAsPFVs, axis=0)
-    index_to_symbols = [feature_vector_to_symbols(fv, objectsAsDicts, objectsAsPFVs) 
+    index_to_symbols = [feature_vector_to_symbols(fv, 
+                                                  objectsAsDicts, 
+                                                  objectsAsPFVs) 
                         for fv in unique_objects_np]
     return np.array(index_to_symbols)[extension.nonzero()[0]]
     
@@ -670,7 +673,8 @@ def right_inv_priority_union(c,b):
     
     index_to_insert_column    = whereBIsNonZero.nonzero()[0]
     index_of_column_to_insert = np.arange(filler_matrix.shape[-1])
-    zipped                    = np.vstack([index_to_insert_column, index_of_column_to_insert])
+    zipped                    = np.vstack([index_to_insert_column, 
+                                           index_of_column_to_insert])
 #     print(f"zipped=\n{zipped}")
     
     for each in zipped.T:
@@ -743,13 +747,16 @@ def left_inv_priority_union(a,c):
     result = np.tile(bInheritedFromC, [2**k,1])
 #     print(f"result=\n{result}")
 
-    filler_columns = [plusZero if insertPlusZero[i] else minusZero for i in range(m) if insertPlusZero[i] or insertMinusZero[i]]
+    filler_columns = [plusZero if insertPlusZero[i] else minusZero 
+                      for i in range(m) 
+                      if insertPlusZero[i] or insertMinusZero[i]]
     filler_matrix  = cartesian_product(*filler_columns)# if not np.all(b == 0) else None # shape = (2^k, 1)
 #     print(f"filler_matrix=\n{filler_matrix}")
     
     index_to_insert_column    = bIsCOrZero.nonzero()[0]
     index_of_column_to_insert = np.arange(filler_matrix.shape[-1])
-    zipped                    = np.vstack([index_to_insert_column, index_of_column_to_insert])
+    zipped                    = np.vstack([index_to_insert_column, 
+                                           index_of_column_to_insert])
 #     print(f"zipped=\n{zipped}")
     
     for each in zipped.T:
