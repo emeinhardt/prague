@@ -268,6 +268,10 @@ class HashableArray(object):
             return np.array(self.__wrapped)
 
         return self.__wrapped
+    
+    
+    def __str__(self):
+        return str(self.unwrap())
 
 
 def from_feature_dict(d, feature_seq):
