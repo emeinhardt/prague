@@ -872,6 +872,86 @@ def make_rule(target, change):
     return phi
 
 
+def pseudolinear_inverse_possible(x,y):
+    '''
+    Calculates whether there exists a pair of vectors m, b s.t.
+      x + m + b = y
+    where 
+     - '+' denotes right priority union. 
+     - b only specifies indices unspecified in x.
+     - m only specifies indices specified in x and specifies them to their 
+       opposite value.
+    
+    This will be possible iff every feature index specified in x is also 
+    specified in y, although x and y need not have the same specified VALUE.
+    '''
+    specified_in_x = np.abs(x) == 1
+    specified_in_y = np.abs(y) == 1
+    specified_in_y_masked_by_whats_specified_in_x = specified_in_y[specified_in_x]
+    return np.all(specified_in_y_masked_by_whats_specified_in_x)
+
+
+def pseudolinear_inverse(x,y):
+    '''
+    If there exists a pair of vectors m, b s.t.
+      x + m + b = y
+    where 
+     - '+' denotes right priority union
+     - b only specifies indices unspecified in x
+     - m only specifies indices specified in x and specifies them to their 
+       opposite value
+    this returns those two vectors m,b.
+    
+    Otherwise this returns None.
+    
+    (See `pseudolinear_inverse_possible` for a description of the conditions 
+    under which these two vectors exist.)
+    '''
+    if not pseudolinear_inverse_possible(x,y):
+        return None
+    
+    specified_in_x    = np.abs(x) == 1
+    unspecified_in_x  = np.abs(x) == 0
+    specified_in_y    = np.abs(y) == 1
+    specified_in_both = specified_in_y & specified_in_x
+    differing         = x != y
+    
+    indices_of_y_that_are_in_b = specified_in_y & unspecified_in_x
+    b = indices_of_y_that_are_in_b * y
+    
+    indices_of_y_that_are_in_m = specified_in_both & differing
+    m = indices_of_y_that_are_in_m * y
+    return (m,b)
+
+
+def pseudolinear_decomposition(t,c):
+    '''
+    Returns the unique pair of vectors m,b s.t.
+      x + m + b = x + c
+    where
+     - '+' denotes right priority union.
+     - b only specifies indices unspecified in t.
+     - m only specifies indices specified in t and species them to their 
+       opposite value.
+    '''
+    specified_in_t    = np.abs(t) == 1
+    unspecified_in_t  = np.abs(t) == 0
+    specified_in_c    = np.abs(c) == 1
+    specified_in_both = specified_in_t & specified_in_c
+    differing         = t != c
+    
+    indices_of_c_that_are_in_b = specified_in_c & unspecified_in_t
+    b = indices_of_c_that_are_in_b * c
+    
+    indices_of_c_that_are_in_m = specified_in_both & differing
+    m = indices_of_c_that_are_in_m * c
+    
+
+    assert np.array_equal(c, priority_union(m,b)) | (lte(c,t) & (m.sum() == 0 & b.sum() == 0)), f"{t}→{c} ≠ {t}→{m}→{b} (= {t}→{priority_union(m,b)})"
+    
+    return (m,b)
+
+
 #############################
 # SPECIFICATION SEMILATTICE #
 #############################
@@ -1039,6 +1119,105 @@ def maximally_specified(M):
     specs = specification_degree(M=M)
     spec_max = np.max(specs)
     return M[specs == spec_max]
+
+
+def join_naive(v,u):
+    '''
+    FIXME document and optimize.
+    '''
+    def j(v_i,u_i):
+        if v_i == 0:
+            return u_i
+        elif u_i == 0:
+            return v_i
+        elif v_i == u_i:
+            return v_i
+        else:
+            return 9
+    return np.array([j(v_i,u_i) for v_i,u_i in zip(v,u)], dtype=np.int8)
+
+
+def join_specification_possible(u,v):
+    '''
+    Given two partial feature vectors u,v, returns whether their join in
+    the specification semilattice exists.
+    '''
+    specified_in_u    = np.abs(u) == 1
+    specified_in_v    = np.abs(v) == 1
+    specified_in_both = specified_in_u & specified_in_v
+    
+    same           = u == v
+    different      = u != v
+    
+    incompatible   = specified_in_both & different
+    return not np.any(incompatible)
+        
+
+def join_specification(u, v):
+    '''Given two partial feature vectors u,v, returns the unique single partial
+    feature vector that is the least upper bound of u and v in the
+    specification semilattice, if it exists. This will be a vector with every 
+    specified value that is specified in u and with every specified value that 
+    is specified in v, and with no other specified values.
+    
+    If no such join exists, returns None.
+    '''
+    # Alternately: given a stack of partial feature vectors M (one vector per
+    # row), returns the least upper bound of the stack in the specification
+    # semilattice if it exists, else None.
+    specified_in_u    = np.abs(u) == 1
+    specified_in_v    = np.abs(v) == 1
+    specified_in_both = specified_in_u & specified_in_v
+    
+    same           = u == v
+    different      = u != v
+    
+    incompatible   = specified_in_both & different
+    if np.any(incompatible):
+        return None
+    
+    specified_just_in_u = specified_in_u & ~specified_in_both
+    specified_just_in_v = specified_in_v & ~specified_in_both
+    
+    join = (specified_in_both * u) + (specified_just_in_u * u) + (specified_just_in_v * v)
+    return join
+
+
+def dual(u):
+    '''
+    Returns a new pfv where every specified feature of u is flipped to its 
+    opposite value.
+    '''
+    return -1 * u
+
+
+def normalize(t,c):
+    '''
+    Given a target vector-change vector pair representing an unconditioned 
+    rewrite rule, this returns (t,c') where c' is distinct from c just in case 
+     - c contains feature specifications that are redundant with respect to t 
+       (≡ c ∧ t ≠ 0^m)
+       - e.g. in [+ + 0] -> [0 + -], the medial + of the change vector does 
+         nothing and this rule is equivalent to [+ + 0] -> [0 0 -], so 
+         ([+ + 0], [0 0 -]) is what would be returned.
+       - c' = the minimal element in (c ∧ t) \ c
+         where a \ c = {b | a + b = c}
+           - treating (c ∧ t) and c as partial relations, c' will be c - (c ∧ t)
+         where a + b = the right priority union of a and b
+    '''
+    meet_tc = meet(t,c)
+    if np.abs(meet_tc).sum() == 0:
+        return (t,c)
+    specified_in_t = np.abs(t) == 1
+    specified_in_c = np.abs(c) == 1
+    same           = t == c
+    zero_out_in_c  = specified_in_c & same
+    keep_from_c    = ~zero_out_in_c
+    
+    assert np.any(zero_out_in_c), f"Expected to zero out some indices of c given (t,c)=({t},{c}) but zero-out mask = {zero_out_in_c}"
+    
+    c_prime = keep_from_c * c
+    return (t, c_prime)
 
 
 ############################################################
