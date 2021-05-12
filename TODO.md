@@ -2,6 +2,17 @@
 
 Development-oriented todo list.
 
+## Documentation and demos
+
+ - Update demo notebook to use functions now integrated into `feature_vector.py`:
+   - `symbol_to_feature_vector`
+   - `feature_vector_to_symbols`
+   - `extension_to_symbols`
+   - `symbol_to_feature_dict`
+   - `pfv_to_fd`
+ - Update demo notebook with whatever rewrite-rule related functionality is there.
+ - Replace notes pdf with something more recent (slides?)
+
 ## Tests
 
  - Add more unit tests for `feature_vector.py` functions (in general).
@@ -9,10 +20,22 @@ Development-oriented todo list.
  
 ## Project structure
 
+ - update/trim dependencies.
  - `requirements` file.
  - add license.
  
 ## Core features
+
+ - Refactor the following functions for stack-compatibility if possible:
+   - `left_inv_priority_union`
+   - `right_inv_priority_union`
+   - `spe_update` (might already be OK?)
+   - `pseudolinear_inverse_possible`
+   - `pseudolinear_inverse`
+   - `pseudolinear_decomposition`
+   - `join_specification_possible`
+   - `join_specification`
+   - `normalize`
  - Add functionality for solving the function analogues of the three problems described in the `readme`.
 
 ## Implementation / performance features
