@@ -1497,7 +1497,7 @@ def upper_closure(x, strict=False):
     vectors, then
         ↑x = {y ∈ X | x ≤ y}
 
-    This function returns that set as a generator.
+    This function returns that as an ndarray.
     '''
     #TODO #FIXME make this function match lower_closure in options, performance,
     # and return-type.
@@ -1506,13 +1506,14 @@ def upper_closure(x, strict=False):
     #There are 2^i elements in ↓x for each possible combination of i unspecified
     #indices.
     combinations_of_indices_to_specify = cat(itertools.combinations(unspecified_indices, i)
-                                             for i in range(0,m_x))
+                                             for i in range(0,m_x+1))
 #     specifications = cat(map(np.array, permutations([-1,1], len(combo)))
 #                          for combo in combinations_of_indices_to_specify)
-    up_x = (composable_put(x, tuple(ind), spec)
-              for ind in combinations_of_indices_to_specify
-              for spec in map(np.array,
-                              itertools.product([-1,1], repeat=len(ind))))
+    up_x = np.array(list(composable_put(x, tuple(ind), spec)
+                         for ind in combinations_of_indices_to_specify
+                         for spec in map(np.array,
+                                         itertools.product([-1,1], repeat=len(ind)))), 
+                    dtype=INT8)
     return up_x
 
 
