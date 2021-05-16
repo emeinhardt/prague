@@ -272,6 +272,10 @@ class HashableArray(object):
     
     def __str__(self):
         return str(self.unwrap())
+    
+    
+    def __repr__(self):
+        return f"Hashable({self.unwrap().__repr__()})"
 
 
 def from_feature_dict(d, feature_seq):
