@@ -29,7 +29,7 @@ def cartesian_product(*arrays):
     '''
     Given n one dimensional vectors, construct their cartesian product analogue.
     '''
-    la = len(arrays)
+    la    = len(arrays)
     dtype = np.result_type(*arrays)
     arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
     for i, a in enumerate(np.ix_(*arrays)):
@@ -48,9 +48,9 @@ def cartesian_product_stack(stack_a, stack_b):
     m, b = stack_b.shape
     # n = stack_a.shape[0]
     # m = stack_b.shape[0]
-    left = np.repeat(stack_a, m, axis=0)
+    left  = np.repeat(stack_a, m, axis=0)
     right = np.tile(stack_b, (n, 1))
-    assert left.shape[0] == n*m, f"left shape 0th dimension should be n*m={n*m}, but instead is {left.shape[0]}"
+    assert left.shape[0]  == n*m, f"left shape 0th dimension should be n*m={n*m}, but instead is {left.shape[0]}"
     assert right.shape[0] == n*m, f"right shape 0th dimension should be n*m={n*m}, but instead is {right.shape[0]}"
     # return left, right
     left  = np.reshape(left,  (n,m,a))
@@ -141,10 +141,10 @@ def trits_to_int(trits):
       trits_to_int(np.array([[0, 1, 2, 0], [0, 0, 1, 1]])) => np.array([15, 4])
     '''
     m = trits.shape[-1]
-    exponents = np.flip(np.arange(m)).astype(np.uint64)
-    my_base = 3
-    powers = np.power(np.array([my_base], dtype=np.uint64),
-                      exponents)
+    exponents  = np.flip(np.arange(m)).astype(np.uint64)
+    my_base    = 3
+    powers     = np.power(np.array([my_base], dtype=np.uint64),
+                         exponents)
 #     base10_int = np.dot(trits, powers).astype(np.uint64)
     base10_int = np.matmul(trits.astype(np.uint64), powers, dtype=np.uint64)
     return base10_int
@@ -245,9 +245,9 @@ class HashableArray(object):
                 Optional. If True, a copy of the input ndaray is created.
                 Defaults to False.
         '''
-        self.__tight = tight
+        self.__tight   = tight
         self.__wrapped = np.array(arr) if tight else arr
-        self.__hash = int(sha1(arr.view(np.uint8)).hexdigest(), 16)
+        self.__hash    = int(sha1(arr.view(np.uint8)).hexdigest(), 16)
 
 
     def __eq__(self, other):
@@ -283,7 +283,7 @@ def from_feature_dict(d, feature_seq):
     Given a feature dictionary and an ordering on features, returns a ternary
     vector version of the dictionary.
     '''
-    value_map = {'0':0, '-':-1, '+':1}
+    value_map     = {'0':0, '-':-1, '+':1}
     value_mapping = lambda v: value_map[v]
     return np.array([value_mapping(d[f]) if f in d else 0 for f in feature_seq], dtype=INT8)
 
@@ -297,7 +297,7 @@ def to_feature_dict(feature_seq, u, value_map=None):
     If value_map is None, the default (0->'0', 1->'+', -1->'-') will be used.
     '''
     n_features = len(feature_seq)
-    n_vals = u.shape[0]
+    n_vals     = u.shape[0]
     assert n_features == n_vals, f"Num features does not match length of u: {n_features} vs. {n_vals}"
 
     if value_map is None:
@@ -349,8 +349,8 @@ def from_spe(s, features=None):
     '''
     assert s[0] == '['
     assert s[-1] == ']'
-    no_brackets = s[1:-1]
-    split = [each for each in no_brackets.split(' ') if each != '']
+    no_brackets  = s[1:-1]
+    split        = [each for each in no_brackets.split(' ') if each != '']
     space_joined = []
     for each in split:
         if each[0] in {'+','-','0'}:
@@ -716,7 +716,7 @@ def left_inv_priority_union(a,c):
     #TODO clean this up, replace for loop + insertion with matrix construction 
     # and multiplication
     assert a.shape[-1] == c.shape[-1], "the last dimension of a and c (the number of features) must be the same."
-    m = c.shape[-1]
+    m         = c.shape[-1]
     plusZero  = np.array([+1,0], dtype=np.int8)
     minusZero = np.array([-1,0], dtype=np.int8)
 #     print(f"a={a}")
@@ -781,9 +781,9 @@ def spe_update(a, b, object_inventory=None):
     Coerces a to reflect what's specified in b (per an SPE-style unconditioned
     rule analogous to "a ⟶ b"; does not support alpha notation).
     '''
-    b_specification_mask = np.abs(b, dtype=INT8)
+    b_specification_mask   = np.abs(b, dtype=INT8)
     b_unspecification_mask = np.logical_not(b_specification_mask)
-    prepped_a = a * b_unspecification_mask
+    prepped_a              = a * b_unspecification_mask
     new_a = prepped_a + b
     # new_a = a.copy()
     # for i in np.arange(new_a):
@@ -945,10 +945,10 @@ def pseudolinear_decomposition(t,c):
     differing         = t != c
     
     indices_of_c_that_are_in_b = specified_in_c & unspecified_in_t
-    b = indices_of_c_that_are_in_b * c
+    b                          = indices_of_c_that_are_in_b * c
     
     indices_of_c_that_are_in_m = specified_in_both & differing
-    m = indices_of_c_that_are_in_m * c
+    m                          = indices_of_c_that_are_in_m * c
     
 
     assert np.array_equal(c, priority_union(m,b)) | (lte(c,t) & (m.sum() == 0 & b.sum() == 0)), f"{t}→{c} ≠ {t}→{m}→{b} (= {t}→{priority_union(m,b)})"
@@ -1045,7 +1045,7 @@ def lte_specification_dagwood(M, U, axis=2):
                       for row in M], dtype=np.int8)
     '''
     cart_prod_arr = np.array(cartesian_product_stack(M,U), dtype=INT8)
-    result = (np.equal(cart_prod_arr[0,:,:],cart_prod_arr[1,:,:]) | np.equal(cart_prod_arr[0,:,:], 0)).prod(axis=2, dtype=INT8)
+    result        = (np.equal(cart_prod_arr[0,:,:],cart_prod_arr[1,:,:]) | np.equal(cart_prod_arr[0,:,:], 0)).prod(axis=2, dtype=INT8)
     return result
 
 
@@ -1103,7 +1103,7 @@ def minimally_specified(M):
     then
      minimally_specified(c) == np.array([[-1,0,0]])
     '''
-    specs = specification_degree(M=M)
+    specs    = specification_degree(M=M)
     spec_min = np.min(specs)
     return M[specs == spec_min]
 
@@ -1120,7 +1120,7 @@ def maximally_specified(M):
     then
      maximally_specified(c) == np.array([[-1,0,1]])
     '''
-    specs = specification_degree(M=M)
+    specs    = specification_degree(M=M)
     spec_max = np.max(specs)
     return M[specs == spec_max]
 
@@ -1220,7 +1220,7 @@ def normalize(t,c):
     
     assert np.any(zero_out_in_c), f"Expected to zero out some indices of c given (t,c)=({t},{c}) but zero-out mask = {zero_out_in_c}"
     
-    c_prime = keep_from_c * c
+    c_prime        = keep_from_c * c
     return (t, c_prime)
 
 
@@ -1242,25 +1242,25 @@ def get_children(pfv, object_inventory=None):
     #TODO support alternative functionality to avoid generating particular
     # children (besides those with nonempty extension)
 
-    m = pfv.shape[0]
+    m                 = pfv.shape[0]
     specified_indices = pfv.nonzero()[0]
-    k = specified_indices.shape[0]
+    k                 = specified_indices.shape[0]
 
     #TODO this step could be optimized if needed/justified
     #TODO it might be ideal to alter this step to never generate children with
     # empty extension (or other properties, cf above)
-    despec_masks = np.ones((k,m), dtype=INT8)
+    despec_masks      = np.ones((k,m), dtype=INT8)
     for i,x in enumerate(specified_indices):
         despec_masks[i,x] = 0
-    children = pfv * despec_masks
+    children          = pfv * despec_masks
 
 
     if object_inventory is None:
         return children
 
-    child_extensions = extensions(children, object_inventory)
-    extensions_nonempty_indicator = child_extensions.sum(axis=1)
-    nonempty_child_indices = extensions_nonempty_indicator.nonzero()[0]
+    child_extensions                 = extensions(children, object_inventory)
+    extensions_nonempty_indicator    = child_extensions.sum(axis=1)
+    nonempty_child_indices           = extensions_nonempty_indicator.nonzero()[0]
     children_with_nonempty_extension = children[nonempty_child_indices]
     return children_with_nonempty_extension
 
@@ -1279,11 +1279,11 @@ def get_parents(pfv, object_inventory=None):
     #TODO support alternative functionality to avoid generating particular
     # parents (besides those with nonempty extension)
 
-    m = pfv.shape[0]
-    specified_mask = np.abs(pfv, dtype=np.int8)
-    nonspecified_mask = np.logical_not(specified_mask)
+    m                    = pfv.shape[0]
+    specified_mask       = np.abs(pfv, dtype=np.int8)
+    nonspecified_mask    = np.logical_not(specified_mask)
     nonspecified_indices = nonspecified_mask.nonzero()[0]
-    k = nonspecified_indices.shape[0]
+    k                    = nonspecified_indices.shape[0]
 
     #TODO this step could be optimized if needed/justified
     #TODO it might be ideal to alter this step to never generate parents with
@@ -1304,9 +1304,9 @@ def get_parents(pfv, object_inventory=None):
 #         print('foo')
 #         return np.empty_like(pfv)[[]]
 
-    parent_extensions = extensions(parents, object_inventory)
-    extensions_nonempty_indicator = parent_extensions.sum(axis=1)
-    nonempty_parent_indices = extensions_nonempty_indicator.nonzero()[0]
+    parent_extensions               = extensions(parents, object_inventory)
+    extensions_nonempty_indicator   = parent_extensions.sum(axis=1)
+    nonempty_parent_indices         = extensions_nonempty_indicator.nonzero()[0]
     parents_with_nonempty_extension = parents[nonempty_parent_indices]
     return parents_with_nonempty_extension
 
@@ -1322,13 +1322,13 @@ def gen_lc(x):
       2. n indices are chosen randomly without replacement from among the
       specified ones.
     '''
-    specified_indices = x.nonzero()[0]
-    k = len(specified_indices)
+    specified_indices        = x.nonzero()[0]
+    k                        = len(specified_indices)
     num_indices_to_unspecify = random.choice(np.arange(k+1))
-    indices_to_unspecify = np.random.choice(specified_indices,
-                                            size=num_indices_to_unspecify,
-                                            replace=False)
-    u = composable_put(x, indices_to_unspecify, 0)
+    indices_to_unspecify     = np.random.choice(specified_indices,
+                                                size=num_indices_to_unspecify,
+                                                replace=False)
+    u                        = composable_put(x, indices_to_unspecify, 0)
     return u
 
 
@@ -1341,15 +1341,15 @@ def combinations_np(n, k):
     Let r = (n choose k). This function generates an ndarray of shape (r,n)
     where each column is a set of k indices.
     '''
-    a = np.ones((k, n-k+1), dtype=int)
+    a    = np.ones((k, n-k+1), dtype=int)
     a[0] = np.arange(n-k+1)
     for j in range(1, k):
-        reps = (n-k+j) - a[j-1]
-        a = np.repeat(a, reps, axis=1)
-        ind = np.add.accumulate(reps)
+        reps           = (n-k+j) - a[j-1]
+        a              = np.repeat(a, reps, axis=1)
+        ind            = np.add.accumulate(reps)
         a[j, ind[:-1]] = 1-reps[1:]
-        a[j, 0] = j
-        a[j] = np.add.accumulate(a[j])
+        a[j, 0]        = j
+        a[j]           = np.add.accumulate(a[j])
     return a
 
 
@@ -1408,8 +1408,8 @@ def lower_closure(x, strict=False, prev_pfvs=None):
     (This is useful for avoiding redundant computation when constructing sets
     of lower closures.)
     '''
-    specified_indices = x.nonzero()[0]
-    k = len(specified_indices)
+    specified_indices   = x.nonzero()[0]
+    k                   = len(specified_indices)
 
     unspecified_indices = (x == 0).nonzero()[0]
 
@@ -1424,7 +1424,7 @@ def lower_closure(x, strict=False, prev_pfvs=None):
 
     #Create a mask with the same shape as x and selection indices in the
     # right place.
-    offsets = np.arange(len(unspecified_indices))
+    offsets        = np.arange(len(unspecified_indices))
     selection_mask = np.insert(combinations_of_indices_to_unspecify,
                                obj = unspecified_indices - offsets,
                                values = 0, #0s go in the indices whose specification won't be changed
@@ -1534,8 +1534,8 @@ def lower_closure_BFE(x, object_inventory=None, prev_pfvs=None):
 
     def adjacent_nodes(hashed_pfv):
         unhashed_pfv = decode_hash(hashed_pfv)
-        children = get_children(unhashed_pfv,
-                                object_inventory=object_inventory)
+        children     = get_children(unhashed_pfv,
+                                    object_inventory=object_inventory)
         return children
 
     def out_of_bounds(unhashed_pfv):
@@ -1587,16 +1587,16 @@ def gather_all_pfvs_with_nonempty_extension(object_inventory, method='eager_filt
     assert method in {'eager_filter', 'unique_hash', 'np.unique'}
 
     if method == 'eager_filter':
-        prefixes_O = prefixes(object_inventory)
+        prefixes_O     = prefixes(object_inventory)
         lower_closures = [lower_closure(o, prev_pfvs=prefixes_O[i])
                           for i,o in enumerate(object_inventory)]
         del prefixes_O
-        lc_mat = np.concatenate(lower_closures)
+        lc_mat         = np.concatenate(lower_closures)
         del lower_closures
         return lc_mat
     else:
         lower_closures = [lower_closure(o) for o in object_inventory]
-        lc_mat = np.concatenate(lower_closures)
+        lc_mat         = np.concatenate(lower_closures)
         del lower_closures
         if method == 'np.unique':
             return np.unique(lc_mat, return_index=False, axis=0)
