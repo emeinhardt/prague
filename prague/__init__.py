@@ -5,7 +5,7 @@ from prague.feature_vector import make_random_objects, load_object_vectors
 from prague.feature_vector import HashableArray
 
 from prague.feature_vector import from_feature_dict, to_feature_dict, to_spe, from_spe
-from prague.feature_vector import make_zero_pfv
+from prague.feature_vector import make_zero_pfv, make_random_fspfv, make_random_pfv
 
 from prague.feature_vector import ternary_pfv_to_trits, trits_to_ternary_pfv
 from prague.feature_vector import trits_to_int, int_to_trits
