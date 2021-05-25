@@ -871,7 +871,7 @@ def right_inv_priority_union(z,y):
     bOffset    = b + offset
     up_bOffset = upper_closure(bOffset)
     undoOffset = (-1 * offset) * offsetAt
-    result = up_bOffset + undoOffset
+    result     =    up_bOffset + undoOffset
     return result
 
 
