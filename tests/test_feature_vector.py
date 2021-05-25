@@ -3,6 +3,7 @@
 import pytest
 import numpy as np
 import prague.feature_vector as fv
+import funcy
 
 INT8 = np.int8
 
@@ -168,7 +169,7 @@ all3VecIO = [(a,b,fv.priority_union(a,b)) for a in all3Vecs for b in all3Vecs]
 def test_priority_union_left_inverse():
     for i,(a,b,c) in enumerate(all3VecIO):
         assert b in fv.left_inv_priority_union(a=a,c=c),  f"{i}:{a},{b},{c}"
-            
+
 def test_priority_union_right_inverse():
     for i,(a,b,c) in enumerate(all3VecIO):
         assert a in fv.right_inv_priority_union(c=c,b=b), f"{i}:{a},{b},{c}"
@@ -189,3 +190,32 @@ def test_priority_union_right_inverse_implementations_are_eq():
         missingFromNew = oldAnswer - newAnswer
         extraInNew     = newAnswer - oldAnswer
         assert oldAnswer == newAnswer, f"{i}:{a},{b},{c}\n{missingFromNew}\n{extraInNew}"
+
+
+# allLC3sNaive = set(funcy.lmap(fv.HashableArray,
+#                               [fv.lower_closure(v) for v in all3Vecs]))
+allLC3sCompressed = set(funcy.lmap(lambda M: frozenset(fv.stack_to_set(M)),
+                                   [fv.lower_closure(v) for v in all3Vecs]))
+
+def test_intersection_of_every_pair_of_LCs_is_the_LC_of_the_meet():
+    for i,(a,b) in enumerate([(a,b) for a in all3Vecs for b in all3Vecs]):
+        lcA,  lcB  = fv.lower_closure(a) , fv.lower_closure(b)
+        lcAs, lcBs = fv.stack_to_set(lcA), fv.stack_to_set(lcB)
+        cap        = lcAs.intersection(lcBs)
+        meet       = fv.meet_specification(a,b)
+        lcMeet     = fv.lower_closure(meet)
+        lcMeets    = fv.stack_to_set(lcMeet)
+        assert cap == lcMeets, f"{i}:{a},{b},{c}\n{cap}\n{lcMeets}"        
+
+def test_not_every_left_inverse_is_a_lower_closure():
+    counterexamples = set()
+    def left_inverse_is_a_lower_closure(i,a,b,c):
+        possibleBs    = fv.left_inv_priority_union(a,c)
+        possibleBsSet = fv.stack_to_set(possibleBs)
+        return possibleBsSet in allLC3sCompressed
+        # , f"{i}:{a},{b},{c}\n{possibleBsSet}"
+    for i,(a,b,c) in enumerate(all3VecIO):
+        if not left_inverse_is_a_lower_closure(i,a,b,c):
+            counterexamples.add((i,(fv.HashableArray(a),fv.HashableArray(b),fv.HashableArray(c))))
+    assert len(counterexamples) > 0, f"no counterexamples!"
+
