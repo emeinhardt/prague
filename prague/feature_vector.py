@@ -376,6 +376,20 @@ def from_spe(s, features=None):
         return spec_map
 
 
+def stack_to_set(M):
+    '''
+    Given a k x m ndarray representing a stack of k pfvs, this returns the
+    corresponding set of HashableArrays.
+    '''
+    return set([HashableArray(v) for v in M])
+
+
+def hashableArrays_to_stack(arrs):
+    '''
+    Given a k-length set of m-length HashableArrays representing a stack of k 
+    pfvs, this returns a corresponding stack of ndarrays.
+    '''
+    return np.array([v.unwrap() for v in arrs], dtype=INT8)
 
 
 #################
