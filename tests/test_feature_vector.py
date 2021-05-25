@@ -167,9 +167,25 @@ all3VecIO = [(a,b,fv.priority_union(a,b)) for a in all3Vecs for b in all3Vecs]
 
 def test_priority_union_left_inverse():
     for i,(a,b,c) in enumerate(all3VecIO):
-        assert b in fv.left_inv_priority_union(a=a,c=c),  f"{i}:{a},{b},{c}"
+        assert b in fv.left_inv_priority_union(x=a,z=c),  f"{i}:{a},{b},{c}"
             
 def test_priority_union_right_inverse():
     for i,(a,b,c) in enumerate(all3VecIO):
-        assert a in fv.right_inv_priority_union(c=c,b=b), f"{i}:{a},{b},{c}"
+        assert a in fv.right_inv_priority_union(z=c,y=b), f"{i}:{a},{b},{c}"
             
+
+def test_priority_union_left_inverse_implementations_are_eq():
+    for i,(a,b,c) in enumerate(all3VecIO):
+        oldAnswer = fv.stack_to_set(fv.left_inv_priority_union(x=a,z=c))
+        newAnswer = fv.stack_to_set(fv.left_inv_priority_union_old(a=a,c=c))
+        missingFromNew = oldAnswer - newAnswer
+        extraInNew     = newAnswer - oldAnswer
+        assert oldAnswer == newAnswer, f"{i}:{a},{b},{c}\n{missingFromNew}\n{extraInNew}"
+
+def test_priority_union_right_inverse_implementations_are_eq():
+    for i,(a,b,c) in enumerate(all3VecIO):
+        oldAnswer = fv.stack_to_set(fv.right_inv_priority_union(z=c,y=b))
+        newAnswer = fv.stack_to_set(fv.right_inv_priority_union_old(c=c,b=b))
+        missingFromNew = oldAnswer - newAnswer
+        extraInNew     = newAnswer - oldAnswer
+        assert oldAnswer == newAnswer, f"{i}:{a},{b},{c}\n{missingFromNew}\n{extraInNew}"
