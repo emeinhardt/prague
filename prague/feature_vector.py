@@ -643,7 +643,7 @@ def priority_union(a,b):
     return spe_update(a,b)
 
 
-def right_inv_priority_union(c,b):
+def right_inv_priority_union_old(c,b):
     '''
     Let + denote right priority union, where for some unknown pfv a
       a + b = c
@@ -671,7 +671,10 @@ def right_inv_priority_union(c,b):
     bNonZero_count  = l = np.count_nonzero(b)
     whereBIsZero    = (b == 0)
     if np.all(whereBIsZero):
-        return c.copy()
+        result = c.copy()
+        if len(result.shape) == 1:
+            result = np.expand_dims(result, 0)
+        return result
     bZero_count     = k = m - bNonZero_count
 #     print(f"l={l}\nk={k}")
     
@@ -705,10 +708,13 @@ def right_inv_priority_union(c,b):
 #         actual_c = prague.priority_union(a_prime, b)
 #         assert np.array_equal(actual_c, c), f"{a_prime} + {b} = {actual_c} ≠ {c}"
     
+    if len(result.shape) == 1:
+        result = np.expand_dims(result, 0)
+
     return result
 
 
-def left_inv_priority_union(a,c):
+def left_inv_priority_union_old(a,c):
     '''
     Let + denote right priority union, where for some unknown pfv b
       a + b = c
@@ -740,7 +746,10 @@ def left_inv_priority_union(a,c):
     whereAIsZero    = a == 0
 #     print(f"whereAIsZero=\n{whereAIsZero}")
     if np.all(whereAIsZero):
-        return c.copy()
+        result = c.copy()
+        if len(result.shape) == 1:
+            result = np.expand_dims(result, 0)
+        return result
     whereAIsNonZero = a != 0
     whereANeqC      = a != c
 #     print(f"whereAIsNonZero && whereANeqC=\n{(whereAIsNonZero & whereANeqC)}")
@@ -755,7 +764,10 @@ def left_inv_priority_union(a,c):
     cIsMinus          = c == -1
     numVaryingIndices = k = np.count_nonzero(bIsCOrZero)
     if k == 0:
-        return bInheritedFromC
+        result = bInheritedFromC
+        if len(result.shape) == 1:
+            result = np.expand_dims(result, 0)
+        return result
 #     print(f"bIsCOrZero={bIsCOrZero}")
     insertPlusZero    = bIsCOrZero & cIsPlus
     insertMinusZero   = bIsCOrZero & cIsMinus
@@ -788,6 +800,78 @@ def left_inv_priority_union(a,c):
 #         actual_c = prague.priority_union(a, b_prime)
 #         assert np.array_equal(actual_c, c), f"{a} + {b_prime} = {actual_c} ≠ {c}"
     
+    if len(result.shape) == 1:
+        result = np.expand_dims(result, 0)
+
+    return result
+
+
+def diff(c,a):
+    '''
+    Given pfvs c, a with meet m = c ∧ a,
+    this calculates the b s.t.
+        c - a = b
+      ≡ c - m = b
+    where c, a, and m are treated as partial relations on {feature labels} x {+1, 0,-1},
+    '''
+    m = meet_specification(c,a)
+    b = c - m
+    return b
+
+
+def left_inv_priority_union(x,z):
+    '''
+    Let + denote right priority union, where for some unknown pfv b
+      a + b = c
+    
+    If \ denotes 'left_inv_priority_union' = the left inverse of right 
+    priority union, then 
+      a \ c = { b | a + b = c }
+    where a,b,c are all ternary pfvs.
+    
+    At the pointwise/ternary value level,
+      x \ y, y < x = ⊥
+      0 \ x        = {x}
+      x \ x        = ↓x
+      x \ y, y ≠ x = {y}
+    In other words, 
+      a_i = 0             -> b_i = c_i
+      a_i ≠ 0 ∧ a_i ≠ c_i -> b_i = c_i
+      a_i ≠ 0 ∧ a_i = c_i -> b_i = c_i ∨ 0
+    '''
+    m        = meet_specification(x,z)
+    b        = diff(z,m)
+    lcM      = lower_closure(m)
+    lcM_proj = priority_union(lcM,b)
+    return lcM_proj
+
+
+def right_inv_priority_union(z,y):
+    '''
+    Let + denote right priority union, where for some unknown pfv a
+      a + b = c
+    
+    If / denotes 'right_inv_priority_union' = the right inverse of right 
+    priority union, then 
+      c / b = { a | a + b = c }
+    where a,b,c are all ternary pfvs.
+    
+    At the pointwise/ternary value level,
+      x / 0 = {x}
+      x / x = ↑0
+    In other words, the only case where '(c,b)' can be informative about 'a'
+    is when 'b' is 0, in which case a=c.
+    '''
+    if not lte_specification(y,z):
+        return None
+    m          = meet_specification(y,z)
+    b          = diff(z,m)
+    offsetAt   = (z == 0) & (y == 0)
+    offset     = np.ones(shape=z.shape, dtype=np.int8) * offsetAt
+    bOffset    = b + offset
+    up_bOffset = upper_closure(bOffset)
+    undoOffset = (-1 * offset) * offsetAt
+    result = up_bOffset + undoOffset
     return result
 
 
