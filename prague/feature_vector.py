@@ -819,7 +819,7 @@ def diff(c,a):
     return b
 
 
-def left_inv_priority_union(x,z):
+def left_inv_priority_union(a,c):
     '''
     Let + denote right priority union, where for some unknown pfv b
       a + b = c
@@ -839,14 +839,14 @@ def left_inv_priority_union(x,z):
       a_i ≠ 0 ∧ a_i ≠ c_i -> b_i = c_i
       a_i ≠ 0 ∧ a_i = c_i -> b_i = c_i ∨ 0
     '''
-    m        = meet_specification(x,z)
-    b        = diff(z,m)
-    lcM      = lower_closure(m)
-    lcM_proj = priority_union(lcM,b)
-    return lcM_proj
+    glb        = meet_specification(a,c)
+    k          = diff(c,glb)
+    lcGlb      = lower_closure(glb)
+    lcGlb_proj = priority_union(lcGlb,k)
+    return lcGlb_proj
 
 
-def right_inv_priority_union(z,y):
+def right_inv_priority_union(c,b):
     '''
     Let + denote right priority union, where for some unknown pfv a
       a + b = c
@@ -862,16 +862,16 @@ def right_inv_priority_union(z,y):
     In other words, the only case where '(c,b)' can be informative about 'a'
     is when 'b' is 0, in which case a=c.
     '''
-    if not lte_specification(y,z):
+    if not lte_specification(b,c):
         return None
-    m          = meet_specification(y,z)
-    b          = diff(z,m)
-    offsetAt   = (z == 0) & (y == 0)
-    offset     = np.ones(shape=z.shape, dtype=np.int8) * offsetAt
-    bOffset    = b + offset
-    up_bOffset = upper_closure(bOffset)
+    glb        = meet_specification(b,c)
+    k          = diff(c,glb)
+    offsetAt   = (c == 0) & (b == 0)
+    offset     = np.ones(shape=c.shape, dtype=INT8) * offsetAt
+    kOffset    = k + offset
+    up_kOffset = upper_closure(kOffset)
     undoOffset = (-1 * offset) * offsetAt
-    result     =    up_bOffset + undoOffset
+    result     =   up_kOffset  + undoOffset
     return result
 
 
