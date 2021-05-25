@@ -655,7 +655,7 @@ def right_inv_priority_union(c,b):
     
     At the pointwise/ternary value level,
       x / 0 = {x}
-      x / x = {+, 0, -}
+      x / x = ↑0
     In other words, the only case where '(c,b)' can be informative about 'a'
     is when 'b' is 0, in which case a=c.
     '''
@@ -719,13 +719,14 @@ def left_inv_priority_union(a,c):
     where a,b,c are all ternary pfvs.
     
     At the pointwise/ternary value level,
+      x \ y, y < x = ⊥
       0 \ x        = {x}
+      x \ x        = ↓x
       x \ y, y ≠ x = {y}
-      x \ x        = {x, 0}
     In other words, 
-      a = 0         -> b = c
-      a ≠ 0 ∧ a ≠ c -> b = c
-      a ≠ 0 ∧ a = c -> b = c ∨ 0
+      a_i = 0             -> b_i = c_i
+      a_i ≠ 0 ∧ a_i ≠ c_i -> b_i = c_i
+      a_i ≠ 0 ∧ a_i = c_i -> b_i = c_i ∨ 0
     '''
     #TODO clean this up, replace for loop + insertion with matrix construction 
     # and multiplication
