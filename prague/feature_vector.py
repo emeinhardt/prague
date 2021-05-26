@@ -1180,7 +1180,7 @@ def meet_specification(u=None, v=None, M=None):
     else:
         raise Exception('Provide exactly two vectors u,v or else a stack M.')
 
-        
+
 def specification_degree(u=None, M=None):
     '''
     Given a pfv u or a stack of pfvs M, calculate the degree(s) of 
@@ -1236,6 +1236,119 @@ def maximally_specified(M):
     return M[specs == spec_max]
 
 
+def min_of(M):
+    '''
+    Given a k x m stack M of m k-length pfvs, returns 
+        the v ∈ M s.t. v is the greatest lower bound of M
+    if such a v exists, otherwise returns None.
+    '''
+    # FIXME test
+    glb = meet_specification(M=M)
+    Ms = stack_to_set(M)
+    if HashableArray(glb) in Ms:
+        return glb
+    else:
+        return None
+
+
+def max_of(M):
+    '''
+    Given a k x m stack M of m k-length pfvs, returns 
+        the v ∈ M s.t. v is the least upper bound of M
+    if such a v exists, otherwise returns None.
+    '''
+    # FIXME test
+    lub_exists = join_specification_possible_stack(M)
+    if not lub_exists:
+        return None
+    lub = join_specification_stack(M=M)
+    Ms = stack_to_set(M)
+    if HashableArray(lub) in Ms:
+        return lub
+    else:
+        return None
+
+
+def contains_own_lower_bound(M):
+    return min_of(M) is not None
+
+
+def contains_own_upper_bound(M):
+    return max_of(M) is not None
+
+
+def closure_under_meet(M):
+    '''
+    Given a k x m stack M of k m-length pfvs, returns a stack representing
+    the closure of M under meet.
+    '''
+    Ms = stack_to_set(M)
+    meets = {HashableArray(meet_specification(a.unwrap(), b.unwrap())) 
+             for a in Ms for b in Ms}
+    return hashableArrays_to_stack(meets)
+
+
+def is_closed_under_meet(M):
+    '''
+    Given a k x m stack M of k m-length pfvs, returns whether M is closed 
+    under meet.
+    '''
+    Ms = stack_to_set(M)
+    meets = {HashableArray(meet_specification(a.unwrap(), b.unwrap())) 
+             for a in Ms for b in Ms}
+    in_closure_but_not_in_Ms = meets - Ms
+    return len(in_closure_but_not_in_Ms) == 0
+
+
+def is_meet_total_over(M):
+    '''
+    Given a k x m stack M of k m-length vectors, returns whether meet is total 
+    over M.
+
+    NOTE: this will *always* be true for a stack of well-formed pfvs.
+    '''
+    return True
+
+
+def closure_under_join(M):
+    '''
+    Given a k x m stack M of k m-length pfvs, returns a stack representing
+    the closure of M under join (wrt all pairs of M where join is defined).
+    '''
+    Ms = stack_to_set(M)
+    joinablePairs = {(a,b) for a in Ms for b in Ms 
+                     if join_specification_possible(a.unwrap(), b.unwrap())}
+    joins = {HashableArray(join_specification(a.unwrap(), b.unwrap())) 
+             for (a,b) in joinablePairs}
+    return hashableArrays_to_stack(joins)
+
+
+def is_join_total_over(M):
+    '''
+    Given a k x m stack M of k m-length vectors, returns whether join is total 
+    over M.
+    '''
+    Ms = stack_to_set(M)
+    allPairs = {(a,b) for a in Ms for b in Ms}
+    joinablePairs = {(a,b) for (a,b) in allPairs
+                     if join_specification_possible(a.unwrap(), b.unwrap())}
+    return allPairs == joinablePairs
+
+
+def is_closed_under_join(M):
+    '''
+    Given a k x m stack M of k m-length pfvs, returns whether M is closed 
+    under join (wrt all pairs of M where join is defined).
+    '''
+    Ms = stack_to_set(M)
+    joinablePairs = {(a,b) for a in Ms for b in Ms 
+                     if join_specification_possible(a.unwrap(), b.unwrap())}
+    joins = {HashableArray(join_specification(a.unwrap(), b.unwrap())) 
+             for (a,b) in joinablePairs}
+    in_closure_but_not_in_Ms = joins - Ms
+    return len(in_closure_but_not_in_Ms) == 0
+
+
 def join_naive(v,u):
     '''
     FIXME document and optimize.
@@ -1252,6 +1365,30 @@ def join_naive(v,u):
     return np.array([j(v_i,u_i) for v_i,u_i in zip(v,u)], dtype=np.int8)
 
 
+def join_specification_possible_stack(M):
+    # column_is_specified_somewhere = np.any(M, axis=0)
+    column_is_all_gte_zero = np.all(M >= 0, axis=0)
+    column_is_all_lte_zero = np.all(M <= 0, axis=0)
+    return np.all(column_is_all_gte_zero | column_is_all_lte_zero)
+
+
+def join_specification_stack(M):
+    if not join_specification_possible_stack(M):
+        return None
+    
+    column_is_all_gte_zero = np.all(M >= 0, axis=0)
+    column_is_all_lte_zero = np.all(M <= 0, axis=0)
+    # column_is_all_zero     = np.all(M == 0, axis=0)
+
+    m = M.shape[-1]
+    plus  = make_ones_pfv(m)
+    minus = -1 * plus
+    # zero  = make_zero_pfv(m)
+
+    j = (column_is_all_lte_zero * minus) + (column_is_all_gte_zero * plus)
+    return j
+
+
 def join_specification_possible(u,v):
     '''
     Given two partial feature vectors u,v, returns whether their join in
@@ -1266,7 +1403,7 @@ def join_specification_possible(u,v):
     
     incompatible   = specified_in_both & different
     return not np.any(incompatible)
-        
+
 
 def join_specification(u, v):
     '''Given two partial feature vectors u,v, returns the unique single partial
@@ -1296,6 +1433,62 @@ def join_specification(u, v):
     
     join = (specified_in_both * u) + (specified_just_in_u * u) + (specified_just_in_v * v)
     return join
+
+
+def is_meet_semilattice(M):
+    return is_meet_total_over(M) and is_closed_under_meet(M)
+
+
+def is_join_semilattice(M):
+    Ms = stack_to_set(M)
+    allPairs = {(a,b) for a in Ms for b in Ms}
+    joinablePairs = {(a,b) for (a,b) in allPairs
+                     if join_specification_possible(a.unwrap(), b.unwrap())}
+    if allPairs != joinablePairs:
+        return False
+    joins = {HashableArray(join_specification(a.unwrap(), b.unwrap())) 
+             for (a,b) in joinablePairs}
+    in_closure_but_not_in_Ms = joins - Ms
+    return len(in_closure_but_not_in_Ms) == 0
+
+
+def is_lattice(M):
+    return is_join_semilattice(M) and is_meet_semilattice(M)
+
+
+def is_bounded_meet_semilattice(M):
+    return is_meet_semilattice(M) and contains_own_lower_bound(M)
+
+
+def is_bounded_join_semilattice(M):
+    return is_join_semilattice(M) and contains_own_upper_bound(M)
+
+
+def is_bounded_lattice(M):
+    return is_lattice(M) and contains_own_upper_bound(M) and contains_own_lower_bound(M)
+
+
+def is_lower_closure(M):
+    lub_exists = join_specification_possible_stack(M)
+    if not lub_exists:
+        return False
+    lub = join_specification_stack(M=M)
+    Ms = stack_to_set(M)
+    if not HashableArray(lub) in Ms:
+        return False
+    lub_lc = lower_closure(lub)
+    lub_lcs = stack_to_set(lub_lc)
+    return lub_lcs == Ms
+
+
+def is_upper_closure(M):
+    glb = meet_specification(M=M)
+    Ms = stack_to_set(M)
+    if not HashableArray(glb) in Ms:
+        return False
+    glb_uc = upper_closure(glb)
+    glb_ucs = stack_to_set(glb_uc)
+    return glb_ucs == Ms
 
 
 def dual(u):
