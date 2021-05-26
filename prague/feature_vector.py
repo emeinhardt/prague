@@ -1528,6 +1528,22 @@ def normalize(t,c):
     return (t, c_prime)
 
 
+def is_antichain(M):
+    '''
+    Returns True iff the set of pfvs in the k x m stack M are all pairwise 
+    incomparable (i.e. the set of pfvs in M form an anti-chain).
+    '''
+    Ms = stack_to_set(M)
+    allPairs = {(a,b) for a in Ms for b in Ms}
+    for aWrapped, bWrapped in allPairs:
+        a, b  = aWrapped.unwrap(),bWrapped.unwrap()
+        aLTEb = lte_specification(a,b)
+        bLTEa = lte_specification(b,a)
+        comparable = aLTEb or bLTEa
+        if comparable and not np.array_equal(a,b):
+            return False
+    return True
+    
 ############################################################
 # GENERATING THE LOWER CLOSURE OF A PARTIAL FEATURE VECTOR #
 ############################################################
