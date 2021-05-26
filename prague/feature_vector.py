@@ -1748,6 +1748,183 @@ def is_complemented_lattice(l_stack, returnCounterexamples=False):
     return len(counterexamples) == 0
 
 
+def distribution_un_bin(un_op_f, bin_op_g, M, eq=None, returnCounterexamples=False):
+    '''
+    Given
+     - a unary function f: V → V
+     - a binary function g: V → V
+     - a stack of pfvs M
+     - an optional equality function for comparing function outputs
+    this checks whether
+        f(g(a,b)) = g(f(a), f(b)) ≡ "f distributes over g"
+    holds for all a,b,c in M.
+    
+    By default this returns a boolean. If returnCounterexamples=True, it returns
+    the (possibly empty) set of counterexamples found instead.
+    '''
+    if eq is None:
+        eq = np.array_equal
+    Ms = stack_to_set(M)
+    allPairs = {(a,b) for a in Ms for b in Ms}
+    counterexamples = set()
+    for aWrapped, bWrapped in allPairs:
+        a,b = aWrapped.unwrap(), bWrapped.unwrap()
+        gab = bin_op_g(a,b)
+        fa  = un_op_f(a)
+        fb  = un_op_f(b)
+        if gab is not None and fa is not None and fb is not None:
+            fgab = un_op_f(gab)
+            gfafb = bin_op_g(fa, fb)
+            if fgab is not None and gfafb is not None:
+                if not eq(gfafb, fgab):
+                    counterexamples.add((a,b, f"f(g({a},{b})) = f({gab}) = {fgab} ≠ {gfafb} = g({fa},{fb}) = g(f({a}), f({b}))"))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+def left_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexamples=False):
+    '''
+    Given 
+      - two binary functions f,g: V -> V on pfvs
+      - a stack of pfvs M
+      - an optional equality function for comparing function outputs
+    this checks whether 
+        f(a, g(b,c)) = g(f(a,b), f(a,c)) ≡ "f distributes over g from the left"
+    holds for all a,b,c in M.
+    
+    By default this returns a boolean. If returnCounterexamples=True, it returns
+    the (possibly empty) set of counterexamples found instead.
+    '''
+    if eq is None:
+        eq = np.array_equal
+    Ms = stack_to_set(M)
+    allTriples = {(a,b,c) for a in Ms for b in Ms for c in Ms}
+    counterexamples = set()
+    for aWrapped, bWrapped, cWrapped in allTriples:
+        a,b,c = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
+        bGc = bin_op_g(b,c)
+        aFb = bin_op_f(a,b)
+        aFc = bin_op_f(a,c)
+        if bGc is not None and aFb is not None and aFc is not None:
+            aFbgc   = bin_op_f(a,bGc)
+            afbGafc = bin_op_g(aFb, aFc)
+            if aFbgc is not None and afbGafc is not None:
+                if not eq(aFbgc, afbGafc):
+                    counterexamples.add((a,b,c, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+def right_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexamples=False):
+    '''
+    Given 
+      - two binary functions f,g on pfvs with the same domain and codomain
+      - a stack of pfvs M
+      - an optional equality function for comparing function outputs
+    this checks whether 
+        f(g(b,c), a) = g(f(b,a), f(c,a)) ≡ "f distributes over g from the right"
+    holds for all a,b,c in M.
+    
+    By default this returns a boolean. If returnCounterexamples=True, it returns
+    the (possibly empty) set of counterexamples found instead.
+    '''
+    if eq is None:
+        eq = np.array_equal
+    Ms = stack_to_set(M)
+    allTriples = {(a,b,c) for a in Ms for b in Ms for c in Ms}
+    counterexamples = set()
+    for aWrapped, bWrapped, cWrapped in allTriples:
+        a,b,c = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
+        bGc = bin_op_g(b,c)
+        bFa = bin_op_f(b,a)
+        cFa = bin_op_f(c,a)
+        if bGc is not None and bFa is not None and cFa is not None:
+            bgcFa   = bin_op_f(bGc, a)
+            bfaGcfa = bin_op_g(bFa, cFa)
+            if bgcFa is not None and bfaGcfa is not None:
+                if not eq(bgcFa, bfaGcfa):
+                    counterexamples.add((a,b,c, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+def preserves_partial_order(po_stack, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs and a function to/from pfvs, this checks whether the
+    image of this function preserves the partial ordering relation of the stack,
+    i.e. whether
+      a ≤ b ⇒ f(a) ≤ f(b)
+    holds with respect to the input stack elements.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns a (possibly empty) set of counterexamples found.
+    '''
+    # po_stack = fv.hashableArrays_to_stack(po_set)
+    po_set = fv.stack_to_set(po_stack)
+    allPairs = {(a,b) for a in po_set for b in po_set}
+    counterexamples = set()
+    for aWrapped, bWrapped in allPairs:
+        a,   b = aWrapped.unwrap(), bWrapped.unwrap()
+        comp_before = fv.lte_specification( a,  b)
+        fa, fb = op(a), op(b)
+        comp_after  = fv.lte_specification(fa, fb)
+        if not (comp_before == comp_after):
+            counterexamples.add(((aWrapped, bWrapped), (fv.HashableArray(fa), fv.HashableArray(fb))))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+def preserves_meet(sl_stack, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs and a function to/from pfvs, this checks whether the
+    function preserves meets, i.e. whether
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns a (possibly empty) set of counterexamples found.
+    '''
+    # sl_stack = fv.hashableArrays_to_stack(sl_set)
+    sl_set = fv.stack_to_set(sl_stack)
+    allPairs = {(a,b) for a in sl_set for b in sl_set}
+    counterexamples = set()
+    for aWrapped, bWrapped in allPairs:
+        a,   b   = aWrapped.unwrap(), bWrapped.unwrap()
+        m_before = fv.meet_specification( a,  b)
+        fa, fb   = op(a), op(b)
+        m_after  = fv.meet_specification(fa, fb)
+        if not np.array_equal(m_before, m_after):
+            counterexamples.add(((aWrapped, bWrapped), (fv.HashableArray(fa), fv.HashableArray(fb))))
+    if counterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+def preserves_join(sl_stack, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs and a function to/from pfvs, this checks whether the
+    function preserves joins, i.e. whether
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns a (possibly empty) set of counterexamples found.
+    '''
+    # sl_stack = fv.hashableArrays_to_stack(sl_set)
+    sl_set = fv.stack_to_set(sl_stack)
+    allPairs = {(a,b) for a in sl_set for b in sl_set}
+    counterexamples = set()
+    for aWrapped, bWrapped in allPairs:
+        a,   b   = aWrapped.unwrap(), bWrapped.unwrap()
+        m_before = fv.join_specification( a,  b)
+        fa, fb   = op(a), op(b)
+        m_after  = fv.join_specification(fa, fb)
+        if m_before is not None and m_after is None:
+            counterexamples.add(((aWrapped, bWrapped), (fv.HashableArray(fa), fv.HashableArray(fb))))
+        if m_before is not None and m_after is not None and not np.array_equal(m_before, m_after):
+            counterexamples.add(((aWrapped, bWrapped), (fv.HashableArray(fa), fv.HashableArray(fb))))
+    if counterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
 
 ############################################################
 # GENERATING THE LOWER CLOSURE OF A PARTIAL FEATURE VECTOR #
