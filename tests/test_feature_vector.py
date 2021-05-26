@@ -164,6 +164,32 @@ all3Vecs = np.array([[x,y,z] for x in {+1, 0,-1}
                              for y in {+1, 0,-1} 
                              for z in {+1, 0,-1}], dtype=INT8)
 
+
+def test_join_specification_possible_stack_implementations_eq():
+    Ms = fv.stack_to_set(all3Vecs)
+    allPairs = {(a,b) for a in Ms for b in Ms}
+    allJoinablePairsA = {(a,b) for (a,b) in allPairs 
+                         if fv.join_specification_possible(a.unwrap(), b.unwrap())}
+    allJoinablePairsB = {(a,b) for (a,b) in allPairs 
+                         if fv.join_specification_possible_stack(np.array([a.unwrap(), b.unwrap()], dtype=INT8))}
+    missingFromB = allJoinablePairsA - allJoinablePairsB
+    missingFromA = allJoinablePairsB - allJoinablePairsA
+    assert allJoinablePairsA == allJoinablePairsB, f"Missing from stack-based result:\n{missingFromB}\nMissing from pairwise result:\n{missingFromA}"
+
+def test_join_specification_stack_implementations_eq():
+    Ms = fv.stack_to_set(all3Vecs)
+    allPairs = {(a,b) for a in Ms for b in Ms}
+    allJoinablePairs = {(a,b) for (a,b) in allPairs 
+                        if fv.join_specification_possible(a.unwrap(), b.unwrap())}
+    joinsA = {fv.HashableArray(fv.join_specification(a.unwrap(),b.unwrap()))
+              for a,b in allJoinablePairs}
+    joinsB = {fv.HashableArray(fv.join_specification_stack(np.array([a.unwrap(), b.unwrap()], dtype=INT8)))
+              for a,b in allJoinablePairs}
+    missingFromB = joinsA - joinsB
+    missingFromA = joinsB - joinsA
+    assert joinsA == joinsB, f"Missing from stack-based result:\n{missingFromB}\nMissing from pairwise result:\n{missingFromA}"
+
+
 all3VecIO = [(a,b,fv.priority_union(a,b)) for a in all3Vecs for b in all3Vecs]
 
 def test_priority_union_left_inverse():
