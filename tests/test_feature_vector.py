@@ -7,10 +7,17 @@ import funcy
 
 INT8 = np.int8
 
+#########################################
+# BASIC TESTS OF FUNDAMENTAL OPERATIONS #
+#########################################
+
 a = np.array([-1, 0,+1, 0], dtype=INT8)
 b = np.array([-1,+1,-1, 0], dtype=INT8)
 
 
+#######
+# lte #
+#######
 
 lte = fv.lte_specification
 lte_stack_left = fv.lte_specification_stack_left
@@ -60,6 +67,10 @@ def test_lte_lc_stack():
     assert lte_stack_left(lc_a, a).all(), f"{lte_stack_left(lc_a, a)}"
 
 
+########
+# meet #
+########
+
 meet = fv.meet_specification
 
 def test_meet_ab():
@@ -74,6 +85,9 @@ def test_meet_lca():
 def test_meet_uca():
     assert np.array_equal(meet(M=uc_a), a)
 
+################
+# extension(s) #
+################
 
 # sample object set over 4 features
 O = np.array([[-1, 0, 1, 1],
@@ -112,6 +126,12 @@ def test_SFPs():
 
 def test_SFPs_stack():
     assert np.array_equal(exts(my_S, O), my_S_exts)
+
+
+
+################
+# trit hashing #
+################
 
 
 ternary_pfv_to_trits = fv.ternary_pfv_to_trits
@@ -160,10 +180,16 @@ def test_ints_to_trits():
 # #     ints_to_trits
 #     pass
 
+
+
 all3Vecs = np.array([[x,y,z] for x in {+1, 0,-1} 
                              for y in {+1, 0,-1} 
                              for z in {+1, 0,-1}], dtype=INT8)
 
+
+#######################################
+# stack-oriented join implementations #
+#######################################
 
 def test_join_specification_possible_stack_implementations_eq():
     Ms = fv.stack_to_set(all3Vecs)
@@ -190,9 +216,13 @@ def test_join_specification_stack_implementations_eq():
     assert joinsA == joinsB, f"Missing from stack-based result:\n{missingFromB}\nMissing from pairwise result:\n{missingFromA}"
 
 
+
 all3VecIO = [(a,b,fv.priority_union(a,b)) for a in all3Vecs for b in all3Vecs]
 
 
+################################################
+# left/right inverse of priority union testing #
+################################################
 
 def test_priority_union_left_inverse_actual_is_expected_to_be_possible():
     for i,(a,b,c) in enumerate(all3VecIO):
@@ -237,6 +267,7 @@ def test_priority_union_right_inverse_implementations_are_eq():
         missingFromNew = oldAnswer - newAnswer
         extraInNew     = newAnswer - oldAnswer
         assert oldAnswer == newAnswer, f"{i}:{a},{b},{c}\n{missingFromNew}\n{extraInNew}"
+
 
 
 # allLC3sNaive = set(funcy.lmap(fv.HashableArray,
