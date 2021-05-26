@@ -192,14 +192,35 @@ def test_join_specification_stack_implementations_eq():
 
 all3VecIO = [(a,b,fv.priority_union(a,b)) for a in all3Vecs for b in all3Vecs]
 
-def test_priority_union_left_inverse():
+
+
+def test_priority_union_left_inverse_actual_is_expected_to_be_possible():
     for i,(a,b,c) in enumerate(all3VecIO):
         assert b in fv.left_inv_priority_union(a=a,c=c),  f"{i}:{a},{b},{c}"
 
-def test_priority_union_right_inverse():
+def test_priority_union_right_inverse_actual_is_expected_to_be_possible():
     for i,(a,b,c) in enumerate(all3VecIO):
         assert a in fv.right_inv_priority_union(c=c,b=b), f"{i}:{a},{b},{c}"
-            
+
+def test_priority_union_left_inverse_all_expected_to_be_possible_are():
+    Ms = fv.stack_to_set(all3Vecs)
+    allPairs = {(a,c) for a in Ms for c in Ms}
+    for (aWrapped,cWrapped) in allPairs:
+        a, c = aWrapped.unwrap(), cWrapped.unwrap()
+        li = fv.left_inv_priority_union(a,c)
+        if li is not None:
+            for b in li:
+                assert np.array_equal(fv.priority_union(a,b), c), f"{a}+{b}≠{c}"
+
+def test_priority_union_right_inverse_all_expected_to_be_possible_are():
+    Ms = fv.stack_to_set(all3Vecs)
+    allPairs = {(c,b) for c in Ms for b in Ms}
+    for (cWrapped,bWrapped) in allPairs:
+        c, b = cWrapped.unwrap(), bWrapped.unwrap()
+        ri = fv.right_inv_priority_union(c,b)
+        if ri is not None:
+            for a in ri:
+                assert np.array_equal(fv.priority_union(a,b), c), f"{a}+{b}≠{c}"
 
 def test_priority_union_left_inverse_implementations_are_eq():
     for i,(a,b,c) in enumerate(all3VecIO):
