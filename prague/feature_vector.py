@@ -1543,6 +1543,82 @@ def is_antichain(M):
         if comparable and not np.array_equal(a,b):
             return False
     return True
+
+
+def meet_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
+    '''
+    Given a set M of pfvs that form a meet semilattice, M is a *distributive* iff
+    for all a, b, x
+     - If a ∧ b ≤ x then ∃ a', b' . a ≤ a', b ≤ b' and x = a' ∧ b'.
+    
+    By default this returns whether this property holds of the parameter stack
+    sl_stack. If returnCounterexamples is True, this instead returns the set of 
+    counterexamples found.
+    '''
+    Ms = stack_to_set(sl_stack)
+    counterexamples = set()
+    allTriples = {(a,b,x) for a in Ms for b in Ms for x in Ms}
+    for aWrapped, bWrapped, xWrapped in allTriples:
+        a, b, x = aWrapped.unwrap(), bWrapped.unwrap(), xWrapped.unwrap()
+        m = meet_specification(a,b)
+        if lte_specification(m, x):
+            ucx  = upper_closure(x)
+            ucxS = stack_to_set(ucx)
+            allPairs = {(aPrime, bPrime) for aPrime in ucxS for bPrime in ucxS}
+            solutions = set()
+            for aPrime, bPrime in allPairs:
+                aLTEaPrime = lte_specification(a, aPrime)
+                bLTEbPrime = lte_specification(b, bPrime)
+                xIsMeetAPrimeBprime = np.array_equal(x, meet_specification(aPrime, bPrime))
+                if aLTEaPrime and bLTEbPrime and xIsMeetAPrimeBprime:
+                    solutions.add((aPrime, bPrime))
+                if len(solutions) > 0:
+                    break
+            if len(solutions) == 0:
+                counterexamples.add((a,b,x))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
+    '''
+    Given a set M of pfvs that form a join semilattice, M is a *distributive* iff
+    for all a, b, x
+     - If x ≤ a ∧ b then ∃ a', b' . a' ≤ a, b' ≤ b and x = a' ∨ b'.
+    
+    By default this returns whether this property holds of the parameter stack
+    sl_stack. If returnCounterexamples is True, this instead returns the set of 
+    counterexamples found.
+    '''
+    Ms = stack_to_set(sl_stack)
+    counterexamples = set()
+    allTriples = {(a,b,x) for a in Ms for b in Ms for x in Ms}
+    for aWrapped, bWrapped, xWrapped in allTriples:
+        a, b, x = aWrapped.unwrap(), bWrapped.unwrap(), xWrapped.unwrap()
+        j = join_specification(a,b)
+        if j is not None:
+            if lte_specification(x, j):
+                lcx  = lower_closure(x)
+                lcxS = stack_to_set(lcx)
+                allPairs = {(aPrime, bPrime) for aPrime in lcxS for bPrime in lcxS}
+                solutions = set()
+                for aPrime, bPrime in allPairs:
+                    aPrimeLTEa       = lte_specification(aPrime, a)
+                    bPrimeLTEb       = lte_specification(bPrime, b)
+                    aPrimeJoinbPrime = join_specification(aPrime, bPrime)
+                    if aPrimeJoinbPrime is not None:
+                        xIsJoinAPrimeBprime = np.array_equal(x, aPrimeJoinbPrime)
+                        if aPrimeLTEa and bPrimeLTEb and xIsJoinAPrimeBprime:
+                            solutions.add((aPrime, bPrime))
+                    if len(solutions) > 0:
+                        break
+                if len(solutions) == 0:
+                    counterexamples.add((a,b,x))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
     
 ############################################################
 # GENERATING THE LOWER CLOSURE OF A PARTIAL FEATURE VECTOR #
