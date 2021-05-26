@@ -1684,6 +1684,71 @@ def lattice_is_modular(l_stack, returnCounterexamples=False):
     return len(counterexamples) == 0
 
 
+def complement_search(x, l_stack):
+    '''
+    Given 
+     - a pfv x 
+     - a stack of pfvs that form a bounded lattice and contain x
+    this returns a stack C of pfvs such that ∀c ∈ C
+     - a ∨ c = join(lattice)
+     - a ∧ c = meet(lattice)
+    '''
+    top = join_specification_stack(l_stack)
+    bot = meet_specification(M=l_stack)
+    Ms  = stack_to_set(l_stack)
+    Cs = {c for c in Ms 
+          if np.array_equal(join_specification(x,c.unwrap()), top) and
+             np.array_equal(meet_specification(x,c.unwrap()), bot)}
+    C = hashableArrays_to_stack(Cs)
+    return C
+
+
+def complement_exact(x, l_stack):
+    '''
+    Given 
+     - a pfv x 
+     - a stack of pfvs that form a bounded lattice and contain x
+    this returns the c in the lattice such that both
+     - a ∨ c = join(lattice)
+     - a ∧ c = meet(lattice)
+    '''
+    top = join_specification_stack(l_stack)
+    bot = meet_specification(M=l_stack)
+    justMin = diff(top,x)
+    xJoinMin = join_specification(x,justMin)
+    xMeetMin = meet_specification(x,justMin)
+    assert np.array_equal(xJoinMin,top), f"{x}, {justMin} | {xJoinMin} ≠ {top}"
+    assert np.array_equal(xMeetMin,bot), f"{x}, {justMin} | {xMeetMin} ≠ {bot}"
+    return justMin
+
+
+def is_complemented_lattice(l_stack, returnCounterexamples=False):
+    '''
+    Given a stack M of pfvs forming a bounded lattice, M is a *complemented* 
+    lattice iff ∀x ∈ M, ∃c ∈ M s.t.
+     - x ∨ c = join(M)
+     - x ∧ c = meet(M)
+    c need not in general be unique, though in distributive lattices complements
+    will be unique (if one exists for any given element).
+
+    By default, this returns whether l_stack is a complemented lattice. If 
+    returnCounterexamples=True, this returns the (possibly empty) set of 
+    counterexamples instead.
+    '''
+    Ms = stack_to_set(l_stack)
+    counterexamples = set()
+    for xWrapped in Ms:
+        x      = xWrapped.unwrap()
+        cStack = complement_search(x, l_stack)
+        cSet   = stack_to_set(c)
+        if len(cSet) == 0:
+            counterexamples.add(x)
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+
 ############################################################
 # GENERATING THE LOWER CLOSURE OF A PARTIAL FEATURE VECTOR #
 ############################################################
