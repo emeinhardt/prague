@@ -1636,6 +1636,8 @@ def lattice_is_distributive(l_stack, returnCounterexamples=False):
     Given a stack of pfvs that are a lattice, this (by default) indicates 
     whether the lattice is distributive. If returnCounterexamples=True, then
     this returns the (possibly empty) set of counterexamples found.
+
+    NB distributivity of a lattice implies modularity.
     '''
     Ms = stack_to_set(l_stack)
     allTriples = {(a,b,c) for a in Ms for b in Ms for c in Ms}
