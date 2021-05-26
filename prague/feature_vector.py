@@ -1619,7 +1619,33 @@ def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
         return counterexamples
     return len(counterexamples) == 0
 
+
+def lattice_is_distributive(l_stack, returnCounterexamples=False):
+    '''
+    A lattice is distributive iff meet always distributes over join:
+        a ∧ (b ∨ c) = (a ∧ b) ∨ (a ∧ c)
     
+    Given a stack of pfvs that are a lattice, this (by default) indicates 
+    whether the lattice is distributive. If returnCounterexamples=True, then
+    this returns the (possibly empty) set of counterexamples found.
+    '''
+    Ms = stack_to_set(l_stack)
+    allTriples = {(a,b,c) for a in Ms for b in Ms for c in Ms}
+    counterexamples = set()
+    for aWrapped, bWrapped, cWrapped in allTriples:
+        a,b,c = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
+        bJc = join_specification(b,c)
+        aMbJc = meet_specification(a,bJc)
+        aMb = meet_specification(a,b)
+        aMc = meet_specification(a,c)
+        aMbJaMc = join_specification(aMb, aMc)
+        if not np.array_equal(aMbJc, aMbJaMc):
+            counterexamples.add((a,b,c, f"{a} ∧ ({b} ∨ {c}) = {a} ∧ {bJc} = {aMbJc} ≠ {aMbJaMc} = {aMb} ∨ {aMc} = ({a} ∧ {b}) ∨ ({a} ∧ {c})"))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
 ############################################################
 # GENERATING THE LOWER CLOSURE OF A PARTIAL FEATURE VECTOR #
 ############################################################
