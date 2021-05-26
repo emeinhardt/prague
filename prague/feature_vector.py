@@ -1872,7 +1872,8 @@ def preserves_partial_order(po_stack, op, returnCounterexamples=False):
         fa, fb = op(a), op(b)
         comp_after  = lte_specification(fa, fb)
         if not (comp_before == comp_after):
-            counterexamples.add(((aWrapped, bWrapped), (HashableArray(fa), HashableArray(fb))))
+            counterexamples.add(((aWrapped, bWrapped, comp_before), 
+                                 (HashableArray(fa), HashableArray(fb), comp_after)))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1895,10 +1896,12 @@ def preserves_meet(sl_stack, op, returnCounterexamples=False):
     for aWrapped, bWrapped in allPairs:
         a,   b   = aWrapped.unwrap(), bWrapped.unwrap()
         m_before = meet_specification( a,  b)
+        f_m_before = op(m_before)
         fa, fb   = op(a), op(b)
         m_after  = meet_specification(fa, fb)
-        if not np.array_equal(m_before, m_after):
-            counterexamples.add(((aWrapped, bWrapped), (HashableArray(fa), HashableArray(fb))))
+        if not np.array_equal(f_m_before, m_after):
+            counterexamples.add(((aWrapped, bWrapped, HashableArray(m_before), HashableArray(f_m_before)), 
+                                 (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
     if counterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1921,12 +1924,15 @@ def preserves_join(sl_stack, op, returnCounterexamples=False):
     for aWrapped, bWrapped in allPairs:
         a,   b   = aWrapped.unwrap(), bWrapped.unwrap()
         m_before = join_specification( a,  b)
+        f_m_before = op(m_before) if m_before is not None else None
         fa, fb   = op(a), op(b)
         m_after  = join_specification(fa, fb)
-        if m_before is not None and m_after is None:
-            counterexamples.add(((aWrapped, bWrapped), (HashableArray(fa), HashableArray(fb))))
-        if m_before is not None and m_after is not None and not np.array_equal(m_before, m_after):
-            counterexamples.add(((aWrapped, bWrapped), (HashableArray(fa), HashableArray(fb))))
+        if f_m_before is not None and m_after is None:
+            counterexamples.add(((aWrapped, bWrapped, HashableArray(m_before), HashableArray(f_m_before)), 
+                                 (HashableArray(fa), HashableArray(fb), m_after)))
+        if f_m_before is not None and m_after is not None and not np.array_equal(f_m_before, m_after):
+            counterexamples.add(((aWrapped, bWrapped, HashableArray(m_before), HashableArray(f_m_before)), 
+                                 (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
     if counterexamples:
         return counterexamples
     return len(counterexamples) == 0
