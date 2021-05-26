@@ -277,6 +277,27 @@ allLC3sCompressed = set(funcy.lmap(lambda M: frozenset(fv.stack_to_set(M)),
 allUC3sCompressed = set(funcy.lmap(lambda M: frozenset(fv.stack_to_set(M)),
                                    [fv.upper_closure(v) for v in all3Vecs]))
 
+
+#####################################
+# complement implementation testing #
+#####################################
+
+def test_complement_implementations_eq_on_LCs():
+    counterexamples = set()
+    for lcS in allLC3sCompressed:
+        lc = fv.hashableArrays_to_stack(lcS)
+        for xWrapped in lcS:
+            x      = xWrapped.unwrap()
+            cStack = fv.complement_search(x, lc)
+            c      = np.expand_dims(fv.complement_exact(x, lc), axis=0)
+            if not np.array_equal(cStack, c):
+                counterexamples.add((lc,x,cStack,c, f"{lc}, {x} | {cStack} ≠ {c}"))
+    assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
+            
+
+
+
+
 def test_intersection_of_every_pair_of_LCs_is_the_LC_of_the_meet():
     for i,(a,b) in enumerate([(a,b) for a in all3Vecs for b in all3Vecs]):
         lcA,  lcB  = fv.lower_closure(a) , fv.lower_closure(b)
