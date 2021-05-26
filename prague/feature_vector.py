@@ -1269,11 +1269,19 @@ def max_of(M):
         return None
 
 
-def contains_own_lower_bound(M):
+def contains_own_meet(M):
+    '''
+    Given a stack of pfvs M, this returns whether M contains its own greatest 
+    lower bound.
+    '''
     return min_of(M) is not None
 
 
-def contains_own_upper_bound(M):
+def contains_own_join(M):
+    '''
+    Given a stack of pfvs M, this returns whether M contains its own least 
+    upper bound.
+    '''
     return max_of(M) is not None
 
 
@@ -1457,15 +1465,15 @@ def is_lattice(M):
 
 
 def is_bounded_meet_semilattice(M):
-    return is_meet_semilattice(M) and contains_own_lower_bound(M)
+    return is_meet_semilattice(M) and contains_own_meet(M)
 
 
 def is_bounded_join_semilattice(M):
-    return is_join_semilattice(M) and contains_own_upper_bound(M)
+    return is_join_semilattice(M) and contains_own_join(M)
 
 
 def is_bounded_lattice(M):
-    return is_lattice(M) and contains_own_upper_bound(M) and contains_own_lower_bound(M)
+    return is_lattice(M) and contains_own_join(M) and contains_own_meet(M)
 
 
 def is_lower_closure(M):
