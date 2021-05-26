@@ -834,6 +834,7 @@ def left_inv_priority_union(a,c):
     
     If \ denotes 'left_inv_priority_union' = the left inverse of right 
     priority union, then 
+      a \ c = ⊥ if there is any index i where c_i = 0 but a_i ≠ 0
       a \ c = { b | a + b = c }
     where a,b,c are all ternary pfvs.
     
@@ -847,6 +848,9 @@ def left_inv_priority_union(a,c):
       a_i ≠ 0 ∧ a_i ≠ c_i -> b_i = c_i
       a_i ≠ 0 ∧ a_i = c_i -> b_i = c_i ∨ 0
     '''
+    whereClteA = (c == 0) & (a != 0)
+    if np.any(whereClteA):
+        return None
     glb        = meet_specification(a,c)
     k          = diff(c,glb)
     lcGlb      = lower_closure(glb)
