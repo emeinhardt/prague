@@ -1862,20 +1862,21 @@ def preserves_partial_order(po_stack, op, returnCounterexamples=False):
     By default, this returns a boolean. If returnCounterexamples=True, then this
     returns a (possibly empty) set of counterexamples found.
     '''
-    # po_stack = fv.hashableArrays_to_stack(po_set)
-    po_set = fv.stack_to_set(po_stack)
+    # po_stack = hashableArrays_to_stack(po_set)
+    po_set = stack_to_set(po_stack)
     allPairs = {(a,b) for a in po_set for b in po_set}
     counterexamples = set()
     for aWrapped, bWrapped in allPairs:
         a,   b = aWrapped.unwrap(), bWrapped.unwrap()
-        comp_before = fv.lte_specification( a,  b)
+        comp_before = lte_specification( a,  b)
         fa, fb = op(a), op(b)
-        comp_after  = fv.lte_specification(fa, fb)
+        comp_after  = lte_specification(fa, fb)
         if not (comp_before == comp_after):
-            counterexamples.add(((aWrapped, bWrapped), (fv.HashableArray(fa), fv.HashableArray(fb))))
+            counterexamples.add(((aWrapped, bWrapped), (HashableArray(fa), HashableArray(fb))))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
+
 
 def preserves_meet(sl_stack, op, returnCounterexamples=False):
     '''
@@ -1885,20 +1886,21 @@ def preserves_meet(sl_stack, op, returnCounterexamples=False):
     By default, this returns a boolean. If returnCounterexamples=True, then this
     returns a (possibly empty) set of counterexamples found.
     '''
-    # sl_stack = fv.hashableArrays_to_stack(sl_set)
-    sl_set = fv.stack_to_set(sl_stack)
+    # sl_stack = hashableArrays_to_stack(sl_set)
+    sl_set = stack_to_set(sl_stack)
     allPairs = {(a,b) for a in sl_set for b in sl_set}
     counterexamples = set()
     for aWrapped, bWrapped in allPairs:
         a,   b   = aWrapped.unwrap(), bWrapped.unwrap()
-        m_before = fv.meet_specification( a,  b)
+        m_before = meet_specification( a,  b)
         fa, fb   = op(a), op(b)
-        m_after  = fv.meet_specification(fa, fb)
+        m_after  = meet_specification(fa, fb)
         if not np.array_equal(m_before, m_after):
-            counterexamples.add(((aWrapped, bWrapped), (fv.HashableArray(fa), fv.HashableArray(fb))))
+            counterexamples.add(((aWrapped, bWrapped), (HashableArray(fa), HashableArray(fb))))
     if counterexamples:
         return counterexamples
     return len(counterexamples) == 0
+
 
 def preserves_join(sl_stack, op, returnCounterexamples=False):
     '''
@@ -1908,19 +1910,19 @@ def preserves_join(sl_stack, op, returnCounterexamples=False):
     By default, this returns a boolean. If returnCounterexamples=True, then this
     returns a (possibly empty) set of counterexamples found.
     '''
-    # sl_stack = fv.hashableArrays_to_stack(sl_set)
-    sl_set = fv.stack_to_set(sl_stack)
+    # sl_stack = hashableArrays_to_stack(sl_set)
+    sl_set = stack_to_set(sl_stack)
     allPairs = {(a,b) for a in sl_set for b in sl_set}
     counterexamples = set()
     for aWrapped, bWrapped in allPairs:
         a,   b   = aWrapped.unwrap(), bWrapped.unwrap()
-        m_before = fv.join_specification( a,  b)
+        m_before = join_specification( a,  b)
         fa, fb   = op(a), op(b)
-        m_after  = fv.join_specification(fa, fb)
+        m_after  = join_specification(fa, fb)
         if m_before is not None and m_after is None:
-            counterexamples.add(((aWrapped, bWrapped), (fv.HashableArray(fa), fv.HashableArray(fb))))
+            counterexamples.add(((aWrapped, bWrapped), (HashableArray(fa), HashableArray(fb))))
         if m_before is not None and m_after is not None and not np.array_equal(m_before, m_after):
-            counterexamples.add(((aWrapped, bWrapped), (fv.HashableArray(fa), fv.HashableArray(fb))))
+            counterexamples.add(((aWrapped, bWrapped), (HashableArray(fa), HashableArray(fb))))
     if counterexamples:
         return counterexamples
     return len(counterexamples) == 0
