@@ -1521,7 +1521,7 @@ def normalize(t,c):
            - treating (c ∧ t) and c as partial relations, c' will be c - (c ∧ t)
          where a + b = the right priority union of a and b
     '''
-    meet_tc = meet(t,c)
+    meet_tc = meet_specification(t,c)
     if np.abs(meet_tc).sum() == 0:
         return (t,c)
     specified_in_t = np.abs(t) == 1
@@ -1583,7 +1583,7 @@ def meet_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
                 if len(solutions) > 0:
                     break
             if len(solutions) == 0:
-                counterexamples.add((a,b,x))
+                counterexamples.add((aWrapped,bWrapped,xWrapped))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1622,7 +1622,7 @@ def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
                     if len(solutions) > 0:
                         break
                 if len(solutions) == 0:
-                    counterexamples.add((a,b,x))
+                    counterexamples.add((aWrapped,bWrapped,xWrapped))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1650,7 +1650,7 @@ def lattice_is_distributive(l_stack, returnCounterexamples=False):
         aMc     = meet_specification(a,c)
         aMbJaMc = join_specification(aMb, aMc)
         if not np.array_equal(aMbJc, aMbJaMc):
-            counterexamples.add((a,b,c, f"{a} ∧ ({b} ∨ {c}) = {a} ∧ {bJc} = {aMbJc} ≠ {aMbJaMc} = {aMb} ∨ {aMc} = ({a} ∧ {b}) ∨ ({a} ∧ {c})"))
+            counterexamples.add((aWrapped,bWrapped,cWrapped, f"{a} ∧ ({b} ∨ {c}) = {a} ∧ {bJc} = {aMbJc} ≠ {aMbJaMc} = {aMb} ∨ {aMc} = ({a} ∧ {b}) ∨ ({a} ∧ {c})"))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1678,7 +1678,7 @@ def lattice_is_modular(l_stack, returnCounterexamples=False):
                 aJ_xMb = join_specification(  a, xMb)
                 aJx_Mb = meet_specification(aJx,   b)
                 if not np.array_equal(aJ_xMb, aJx_Mb):
-                    counterexamples.add((a,b,x, f"{a} ∨ ({x} ∧ {b}) = {a} ∨ {xMb} = {aJ_xMb} ≠ {aJx_Mb} = {aJx} ∧ {b} = ({a} ∨ {x}) ∧ {b}"))
+                    counterexamples.add((aWrapped,bWrapped,xWrapped, f"{a} ∨ ({x} ∧ {b}) = {a} ∨ {xMb} = {aJ_xMb} ≠ {aJx_Mb} = {aJx} ∧ {b} = ({a} ∨ {x}) ∧ {b}"))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1742,7 +1742,7 @@ def is_complemented_lattice(l_stack, returnCounterexamples=False):
         cStack = complement_search(x, l_stack)
         cSet   = stack_to_set(c)
         if len(cSet) == 0:
-            counterexamples.add(x)
+            counterexamples.add(xWrapped)
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1777,7 +1777,7 @@ def distribution_un_bin(un_op_f, bin_op_g, M, eq=None, returnCounterexamples=Fal
             gfafb = bin_op_g(fa, fb)
             if fgab is not None and gfafb is not None:
                 if not eq(gfafb, fgab):
-                    counterexamples.add((a,b, f"f(g({a},{b})) = f({gab}) = {fgab} ≠ {gfafb} = g({fa},{fb}) = g(f({a}), f({b}))"))
+                    counterexamples.add((aWrapped,bWrapped, f"f(g({a},{b})) = f({gab}) = {fgab} ≠ {gfafb} = g({fa},{fb}) = g(f({a}), f({b}))"))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1811,7 +1811,7 @@ def left_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexamp
             afbGafc = bin_op_g(aFb, aFc)
             if aFbgc is not None and afbGafc is not None:
                 if not eq(aFbgc, afbGafc):
-                    counterexamples.add((a,b,c, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
+                    counterexamples.add((aWrapped,bWrapped,cWrapped, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1845,7 +1845,7 @@ def right_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexam
             bfaGcfa = bin_op_g(bFa, cFa)
             if bgcFa is not None and bfaGcfa is not None:
                 if not eq(bgcFa, bfaGcfa):
-                    counterexamples.add((a,b,c, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
+                    counterexamples.add((aWrapped,bWrapped,cWrapped, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
