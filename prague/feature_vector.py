@@ -1882,6 +1882,8 @@ def preserves_meet(sl_stack, op, returnCounterexamples=False):
     '''
     Given a stack of pfvs and a function to/from pfvs, this checks whether the
     function preserves meets, i.e. whether
+      f(a) ∧ f(b) = f(a ∧ b)
+    holds with respect to the input stack elements.
 
     By default, this returns a boolean. If returnCounterexamples=True, then this
     returns a (possibly empty) set of counterexamples found.
@@ -1906,6 +1908,8 @@ def preserves_join(sl_stack, op, returnCounterexamples=False):
     '''
     Given a stack of pfvs and a function to/from pfvs, this checks whether the
     function preserves joins, i.e. whether
+      f(a) ∨ f(b) = f(a ∨ b)
+    holds with respect to the input stack elements.
 
     By default, this returns a boolean. If returnCounterexamples=True, then this
     returns a (possibly empty) set of counterexamples found.
