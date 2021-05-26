@@ -243,6 +243,8 @@ def test_priority_union_right_inverse_implementations_are_eq():
 #                               [fv.lower_closure(v) for v in all3Vecs]))
 allLC3sCompressed = set(funcy.lmap(lambda M: frozenset(fv.stack_to_set(M)),
                                    [fv.lower_closure(v) for v in all3Vecs]))
+allUC3sCompressed = set(funcy.lmap(lambda M: frozenset(fv.stack_to_set(M)),
+                                   [fv.upper_closure(v) for v in all3Vecs]))
 
 def test_intersection_of_every_pair_of_LCs_is_the_LC_of_the_meet():
     for i,(a,b) in enumerate([(a,b) for a in all3Vecs for b in all3Vecs]):
