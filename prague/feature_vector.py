@@ -1572,7 +1572,7 @@ def meet_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
         if lte_specification(m, x):
             ucx  = upper_closure(x)
             ucxS = stack_to_set(ucx)
-            allPairs = {(aPrime, bPrime) for aPrime in ucxS for bPrime in ucxS}
+            allPairs  = {(aPrime, bPrime) for aPrime in ucxS for bPrime in ucxS}
             solutions = set()
             for aPrime, bPrime in allPairs:
                 aLTEaPrime = lte_specification(a, aPrime)
@@ -1609,7 +1609,7 @@ def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
             if lte_specification(x, j):
                 lcx  = lower_closure(x)
                 lcxS = stack_to_set(lcx)
-                allPairs = {(aPrime, bPrime) for aPrime in lcxS for bPrime in lcxS}
+                allPairs  = {(aPrime, bPrime) for aPrime in lcxS for bPrime in lcxS}
                 solutions = set()
                 for aPrime, bPrime in allPairs:
                     aPrimeLTEa       = lte_specification(aPrime, a)
@@ -1641,14 +1641,42 @@ def lattice_is_distributive(l_stack, returnCounterexamples=False):
     allTriples = {(a,b,c) for a in Ms for b in Ms for c in Ms}
     counterexamples = set()
     for aWrapped, bWrapped, cWrapped in allTriples:
-        a,b,c = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
-        bJc = join_specification(b,c)
-        aMbJc = meet_specification(a,bJc)
-        aMb = meet_specification(a,b)
-        aMc = meet_specification(a,c)
+        a,b,c   = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
+        bJc     = join_specification(b,c)
+        aMbJc   = meet_specification(a,bJc)
+        aMb     = meet_specification(a,b)
+        aMc     = meet_specification(a,c)
         aMbJaMc = join_specification(aMb, aMc)
         if not np.array_equal(aMbJc, aMbJaMc):
             counterexamples.add((a,b,c, f"{a} ∧ ({b} ∨ {c}) = {a} ∧ {bJc} = {aMbJc} ≠ {aMbJaMc} = {aMb} ∨ {aMc} = ({a} ∧ {b}) ∨ ({a} ∧ {c})"))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+def lattice_is_modular(l_stack, returnCounterexamples=False):
+    '''
+    A lattice is modular iff the following associativity-like property holds:
+        If a ≤ b, then ∀x, a ∨ (x ∧ b) = (a ∨ x) ∧ b
+    
+    Given a stack of pfvs that are a lattice, this (by default) indicates 
+    whether the lattice is modular. If returnCounterexamples=True, then
+    this returns the (possibly empty) set of counterexamples found.
+    '''
+    Ms = stack_to_set(l_stack)
+    allPairs   = {(a,b) for a in Ms for b in Ms}
+    counterexamples = set()
+    for aWrapped, bWrapped in allPairs:
+        a,b = aWrapped.unwrap(), bWrapped.unwrap()
+        if lte_specification(a,b):
+            for xWrapped in Ms:
+                x      = xWrapped.unwrap()
+                xMb    = meet_specification(  x,   b)
+                aJx    = join_specification(  a,   x)
+                aJ_xMb = join_specification(  a, xMb)
+                aJx_Mb = meet_specification(aJx,   b)
+                if not np.array_equal(aJ_xMb, aJx_Mb):
+                    counterexamples.add((a,b,x, f"{a} ∨ ({x} ∧ {b}) = {a} ∨ {xMb} = {aJ_xMb} ≠ {aJx_Mb} = {aJx} ∧ {b} = ({a} ∨ {x}) ∧ {b}"))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
