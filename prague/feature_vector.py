@@ -1501,8 +1501,8 @@ def is_upper_closure(M):
 
 def dual(u):
     '''
-    Returns a new pfv where every specified feature of u is flipped to its 
-    opposite value.
+    An involution that returns a new pfv where every specified feature of u is 
+    flipped to its opposite value.
     '''
     return -1 * u
 
