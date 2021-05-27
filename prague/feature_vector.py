@@ -1872,7 +1872,7 @@ def preserves_partial_order(po_stack, op, returnCounterexamples=False):
         fa, fb = op(a), op(b)
         comp_after  = lte_specification(fa, fb)
         if not (comp_before == comp_after):
-            counterexamples.add(((aWrapped, bWrapped, comp_before), 
+            counterexamples.add(((aWrapped         , bWrapped         , comp_before), 
                                  (HashableArray(fa), HashableArray(fb), comp_after)))
     if returnCounterexamples:
         return counterexamples
@@ -1900,7 +1900,7 @@ def preserves_meet(sl_stack, op, returnCounterexamples=False):
         fa, fb   = op(a), op(b)
         m_after  = meet_specification(fa, fb)
         if not np.array_equal(f_m_before, m_after):
-            counterexamples.add(((aWrapped, bWrapped, HashableArray(m_before), HashableArray(f_m_before)), 
+            counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
                                  (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
     if counterexamples:
         return counterexamples
@@ -1928,14 +1928,189 @@ def preserves_join(sl_stack, op, returnCounterexamples=False):
         fa, fb   = op(a), op(b)
         m_after  = join_specification(fa, fb)
         if f_m_before is not None and m_after is None:
-            counterexamples.add(((aWrapped, bWrapped, HashableArray(m_before), HashableArray(f_m_before)), 
+            counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
                                  (HashableArray(fa), HashableArray(fb), m_after)))
         if f_m_before is not None and m_after is not None and not np.array_equal(f_m_before, m_after):
-            counterexamples.add(((aWrapped, bWrapped, HashableArray(m_before), HashableArray(f_m_before)), 
+            counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
                                  (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
     if counterexamples:
         return counterexamples
     return len(counterexamples) == 0
+
+
+def preserves_meet_semilattice(msl_stack, op, checkBound=False, returnCounterexamples=False):
+    '''
+    Given 
+     - a stack of pfvs that form a meet semilattice
+     - a unary operation on pfvs
+    
+    This identifies the counterexamples (if any) to the proposition that the 
+    operation is a meet-semilattice homomorphism:
+     - partial ordering is preserved
+     - meets are preserved
+     - the minimum element is preserved (if checkBound=True)
+
+    By default this returns a boolean indicating whether there are any 
+    counterexamples. If returnCounterexamples=True, then this returns the 
+    (possibly empty) set of counterexamples found.
+    '''
+    is_po_preserved_counterexamples = preserves_partial_order(msl_stack, op, True)
+    is_po_preserved                 = len(is_po_preserved_counterexamples) == 0
+
+    are_meets_preserved_counterexamples = preserves_meet(msl_stack, op, True)
+    are_meets_preserved                 = len(are_meets_preserved_counterexamples) == 0
+
+    po_and_meets_counterexamples = is_po_preserved_counterexamples.union(are_meets_preserved_counterexamples)
+
+    Ms            = stack_to_set(msl_stack)
+    Ms_out        = {HashableArray(op(v.unwrap())) for v in Ms}
+    msl_out_stack = hashableArrays_to_stack(Ms_out)
+
+    is_msl = is_meet_semilattice(msl_out_stack)
+    if not is_msl:
+        po_and_meets_counterexamples.add("image of op is not msl")
+
+    if checkBound:
+        glb = min_of(msl_stack)
+        if glb is None:
+            raise Exception(f"Putatively bounded meet semilattice without glb:\n{msl_stack}")
+        glb_out = op(glb)
+        
+        if glb_out is not None:
+            # Ms            = stack_to_set(msl_stack)
+            # Ms_out        = {HashableArray(op(v.unwrap())) for v in Ms}
+            # msl_out_stack = hashableArrays_to_stack(Ms_out)
+            glb_Ms_out    = min_of(msl_out_stack)
+            if glb_Ms_out is not None:
+                is_glb_preserved = np.array_equal(glb_out, glb_Ms_out)
+            else:
+                is_glb_preserved = False
+        else:
+            is_glb_preserved = False
+        
+        glb_counterexamples = set()
+        if not is_glb_preserved:
+            glbWrapped        = HashableArray(glb)
+            fglbWrapped       = HashableArray(glb_out) if glb_out is not None else None
+            glb_Ms_outWrapped = HashableArray(glb_Ms_out) if glb_Ms_out is not None else None
+            glb_counterexamples.add((glbWrapped, fglbWrapped, glb_Ms_outWrapped, "glb not preserved"))
+        
+        msl_preservation_counterexamples = po_and_meets_counterexamples.union(glb_counterexamples)
+
+        is_bmsl = is_bounded_meet_semilattice(msl_out_stack)
+        if not is_bmsl:
+            msl_preservation_counterexamples.add("image of op is not bmsl")
+        
+        if returnCounterexamples:
+            return msl_preservation_counterexamples
+        return len(msl_preservation_counterexamples) == 0
+    
+    if returnCounterexamples:
+        return po_and_meets_counterexamples
+    return len(po_and_meets_counterexamples) == 0
+
+
+def preserves_join_semilattice(jsl_stack, op, checkBound=False, returnCounterexamples=False):
+    '''
+    Given 
+     - a stack of pfvs that form a join semilattice
+     - a unary operation on pfvs
+    
+    This identifies the counterexamples (if any) to the proposition that the 
+    operation is a join-semilattice homomorphism:
+     - partial ordering is preserved
+     - joins are preserved
+     - the maximum element is preserved (if checkBound=True)
+
+    By default this returns a boolean indicating whether there are any 
+    counterexamples. If returnCounterexamples=True, then this returns the 
+    (possibly empty) set of counterexamples found.
+    '''
+    is_po_preserved_counterexamples = preserves_partial_order(jsl_stack, op, True)
+    is_po_preserved                 = len(is_po_preserved_counterexamples) == 0
+
+    are_joins_preserved_counterexamples = preserves_join(jsl_stack, op, True)
+    are_joins_preserved                 = len(are_joins_preserved_counterexamples) == 0
+
+    po_and_joins_counterexamples = is_po_preserved_counterexamples.union(are_joins_preserved_counterexamples)
+
+    Ms            = stack_to_set(jsl_stack)
+    Ms_out        = {HashableArray(op(v.unwrap())) for v in Ms}
+    jsl_out_stack = hashableArrays_to_stack(Ms_out)
+
+    is_jsl = is_join_semilattice(jsl_out_stack)
+    if not is_jsl:
+        po_and_joins_counterexamples.add("image of op is not jsl")
+
+    if checkBound:
+        lub = max_of(jsl_stack)
+        if lub is None:
+            raise Exception(f"Putatively bounded join semilattice without lub:\n{jsl_stack}")
+        lub_out = op(lub)
+        
+        if lub_out is not None:
+            # Ms            = stack_to_set(jsl_stack)
+            # Ms_out        = {HashableArray(op(v.unwrap())) for v in Ms}
+            # jsl_out_stack = hashableArrays_to_stack(Ms_out)
+            lub_Ms_out    = max_of(jsl_out_stack)
+            if lub_Ms_out is not None:
+                is_lub_preserved = np.array_equal(lub_out, lub_Ms_out)
+            else:
+                is_lub_preserved = False
+        else:
+            is_lub_preserved = False
+        
+        lub_counterexamples = set()
+        if not is_lub_preserved:
+            lubWrapped        = HashableArray(lub)
+            flubWrapped       = HashableArray(lub_out) if lub_out is not None else None
+            lub_Ms_outWrapped = HashableArray(lub_Ms_out) if lub_Ms_out is not None else None
+            lub_counterexamples.add((lubWrapped, flubWrapped, lub_Ms_outWrapped, "lub not preserved"))
+        
+        jsl_preservation_counterexamples = po_and_joins_counterexamples.union(lub_counterexamples)
+
+        is_bjsl = is_bounded_join_semilattice(jsl_out_stack)
+        if not is_bjsl:
+            jsl_preservation_counterexamples.add("image of op is not bjsl")
+        
+        if returnCounterexamples:
+            return jsl_preservation_counterexamples
+        return len(jsl_preservation_counterexamples) == 0
+    
+    if returnCounterexamples:
+        return po_and_joins_counterexamples
+    return len(po_and_joins_counterexamples) == 0
+
+
+def preserves_lattice(l_stack, op, checkBound=False, returnCounterexamples=False):
+    '''
+    Given 
+     - a stack of pfvs that form a lattice
+     - a unary operation on pfvs
+    
+    This identifies the counterexamples (if any) to the proposition that the 
+    operation is a lattice homomorphism:
+     - partial ordering is preserved
+     - meets are preserved
+     - joins are preserved
+     - the minimum and maximum elements are preserved (if checkBound=True)
+
+    By default this returns a boolean indicating whether there are any 
+    counterexamples. If returnCounterexamples=True, then this returns the 
+    (possibly empty) set of counterexamples found.
+    '''
+    preserves_msl_counterexamples = preserves_meet_semilattice(l_stack, checkBound, returnCounterexamples=True)
+    # preserves_msl                 = len(preserves_msl_counterexamples) == 0
+
+    preserves_jsl_counterexamples = preserves_meet_semilattice(l_stack, checkBound, returnCounterexamples=True)
+    # preserves_jsl                 = len(preserves_jsl_counterexamples) == 0
+
+    preserves_l_counterexamples = preserves_msl_counterexamples.union(preserves_jsl_counterexamples)
+    preserves_l                 = len(preserves_l_counterexamples) == 0
+
+    if returnCounterexamples:
+        return preserves_l_counterexamples
+    return preserves_l
 
 
 ############################################################
