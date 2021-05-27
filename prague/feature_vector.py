@@ -1808,12 +1808,16 @@ def left_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexamp
         bGc = bin_op_g(b,c)
         aFb = bin_op_f(a,b)
         aFc = bin_op_f(a,c)
-        if bGc is not None and aFb is not None and aFc is not None:
-            aFbgc   = bin_op_f(a,bGc)
-            afbGafc = bin_op_g(aFb, aFc)
-            if aFbgc is not None and afbGafc is not None:
-                if not eq(aFbgc, afbGafc):
-                    counterexamples.add((aWrapped,bWrapped,cWrapped, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
+        aFbgc   = bin_op_f(a,bGc) if bGc is not None else None
+        afbGafc = bin_op_g(aFb, aFc) if (aFb is not None) and (aFc is not None) else None
+        if (aFbgc is not None and afbGafc is None) or (aFbgc is None and afbGafc is not None) or (not eq(aFbgc, afbGafc)):
+            counterexamples.add((aWrapped,bWrapped,cWrapped, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
+        # if bGc is not None and aFb is not None and aFc is not None:
+        #     aFbgc   = bin_op_f(a,bGc)
+        #     afbGafc = bin_op_g(aFb, aFc)
+        #     if aFbgc is not None and afbGafc is not None:
+        #         if not eq(aFbgc, afbGafc):
+        #             counterexamples.add((aWrapped,bWrapped,cWrapped, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1842,12 +1846,16 @@ def right_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexam
         bGc = bin_op_g(b,c)
         bFa = bin_op_f(b,a)
         cFa = bin_op_f(c,a)
-        if bGc is not None and bFa is not None and cFa is not None:
-            bgcFa   = bin_op_f(bGc, a)
-            bfaGcfa = bin_op_g(bFa, cFa)
-            if bgcFa is not None and bfaGcfa is not None:
-                if not eq(bgcFa, bfaGcfa):
-                    counterexamples.add((aWrapped,bWrapped,cWrapped, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
+        bgcFa   = bin_op_f(bGc, a) if bGc is not None else None
+        bfaGcfa = bin_op_g(bFa, cFa) if (bFa is not None and cFa is not None) else None
+        if (bgcFa is not None and bfaGcfa is None) or (bgcFa is None and bfaGcfa is not None) or (not eq(bgcFa, bfaGcfa)):
+            counterexamples.add((aWrapped,bWrapped,cWrapped, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
+        # if bGc is not None and bFa is not None and cFa is not None:
+        #     bgcFa   = bin_op_f(bGc, a)
+        #     bfaGcfa = bin_op_g(bFa, cFa)
+        #     if bgcFa is not None and bfaGcfa is not None:
+        #         if not eq(bgcFa, bfaGcfa):
+        #             counterexamples.add((aWrapped,bWrapped,cWrapped, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1904,7 +1912,7 @@ def preserves_meet(sl_stack, op, returnCounterexamples=False):
         if not np.array_equal(f_m_before, m_after):
             counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
                                  (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
-    if counterexamples:
+    if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
 
@@ -1935,7 +1943,7 @@ def preserves_join(sl_stack, op, returnCounterexamples=False):
         if f_m_before is not None and m_after is not None and not np.array_equal(f_m_before, m_after):
             counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
                                  (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
-    if counterexamples:
+    if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
 
