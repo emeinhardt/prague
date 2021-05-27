@@ -293,9 +293,23 @@ def test_complement_implementations_eq_on_LCs():
             if not np.array_equal(cStack, c):
                 counterexamples.add((lc,x,cStack,c, f"{lc}, {x} | {cStack} ≠ {c}"))
     assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
-            
 
+###################
+# STRUCTURE TESTS #
+###################
 
+def test_all_pfvs_together_form_a_bounded_meet_semilattice():
+    assert fv.is_bounded_meet_semilattice(all3Vecs)
+
+def test_every_lc_defines_a_bounded_lattice():
+    for i,v in enumerate(all3Vecs):
+        lc = fv.lower_closure(v)
+        assert fv.is_bounded_lattice(lc), f"{i}:{v}\n{lc}"
+
+def test_every_uc_defines_a_bounded_meet_semilattice():
+    for i,v in enumerate(all3Vecs):
+        uc = fv.upper_closure(v)
+        assert fv.is_bounded_meet_semilattice(uc), f"{i}:{v}\n{uc}"
 
 
 def test_intersection_of_every_pair_of_LCs_is_the_LC_of_the_meet():
@@ -306,7 +320,8 @@ def test_intersection_of_every_pair_of_LCs_is_the_LC_of_the_meet():
         meet       = fv.meet_specification(a,b)
         lcMeet     = fv.lower_closure(meet)
         lcMeets    = fv.stack_to_set(lcMeet)
-        assert cap == lcMeets, f"{i}:{a},{b},{c}\n{cap}\n{lcMeets}"        
+        assert cap == lcMeets, f"{i}:{a},{b}\n{cap}\n{lcMeets}"        
+
 
 def test_not_every_left_inverse_is_a_lower_closure():
     counterexamples = set()
