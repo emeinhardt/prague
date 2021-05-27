@@ -1630,7 +1630,7 @@ def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
     return len(counterexamples) == 0
 
 
-def lattice_is_distributive(l_stack, returnCounterexamples=False):
+def is_lattice_distributive(l_stack, returnCounterexamples=False):
     '''
     A lattice is distributive iff meet always distributes over join:
         a ∧ (b ∨ c) = (a ∧ b) ∨ (a ∧ c)
@@ -1658,7 +1658,7 @@ def lattice_is_distributive(l_stack, returnCounterexamples=False):
     return len(counterexamples) == 0
 
 
-def lattice_is_modular(l_stack, returnCounterexamples=False):
+def is_lattice_modular(l_stack, returnCounterexamples=False):
     '''
     A lattice is modular iff the following associativity-like property holds:
         If a ≤ b, then ∀x, a ∨ (x ∧ b) = (a ∨ x) ∧ b
