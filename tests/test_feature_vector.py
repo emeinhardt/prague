@@ -298,19 +298,46 @@ def test_complement_implementations_eq_on_LCs():
 # STRUCTURE TESTS #
 ###################
 
+# basic properties of THE WHOLE SPECIFICATION SEMILATTICE
+
 def test_all_pfvs_together_form_a_bounded_meet_semilattice():
     assert fv.is_bounded_meet_semilattice(all3Vecs)
+
+def test_all_pfvs_together_do_NOT_form_a_join_semilattice():
+    assert not fv.is_join_semilattice(all3Vecs)
+
+def test_all_pfvs_together_do_NOT_form_a_distributive_meet_semilattice():
+    is_dist = fv.meet_semilattice_is_distributive(all3Vecs)
+    # if not is_dist:
+    #     cxsWrapped = fv.meet_semilattice_is_distributive(all3Vecs, True)
+    #     cxs        = funcy.lmap(lambda abx: funcy.lmap(lambda v: v.unwrap(), list(abx)), 
+    #                             list(cxsWrapped))
+    #     cxsPretty = funcy.lmap(lambda abx: f"{abx[2]} ≤ {abx[0]} ∧ {abx[1]} but a',b' dne",
+    #                            cxs)
+    #     print("\n".join(cxsPretty))
+    assert not is_dist
+
+# basic properties of LOWER CLOSURES of the specification semilattice
 
 def test_every_lc_defines_a_bounded_lattice():
     for i,v in enumerate(all3Vecs):
         lc = fv.lower_closure(v)
         assert fv.is_bounded_lattice(lc), f"{i}:{v}\n{lc}"
 
-def test_every_uc_defines_a_bounded_meet_semilattice():
+def test_every_lc_defines_a_distributive_lattice():
     for i,v in enumerate(all3Vecs):
-        uc = fv.upper_closure(v)
-        assert fv.is_bounded_meet_semilattice(uc), f"{i}:{v}\n{uc}"
+        lc = fv.lower_closure(v)
+        assert fv.is_lattice_distributive(lc), f"{i}:{v}\n{lc}"
 
+def test_every_lc_defines_a_modular_lattice():
+    for i,v in enumerate(all3Vecs):
+        lc = fv.lower_closure(v)
+        assert fv.is_lattice_modular(lc), f"{i}:{v}\n{lc}"
+
+def test_every_lc_defines_a_complemented_lattice():
+    for i,v in enumerate(all3Vecs):
+        lc = fv.lower_closure(v)
+        assert fv.is_complemented_lattice(lc), f"{i}:{v}\n{lc}"
 
 def test_intersection_of_every_pair_of_LCs_is_the_LC_of_the_meet():
     for i,(a,b) in enumerate([(a,b) for a in all3Vecs for b in all3Vecs]):
@@ -320,7 +347,43 @@ def test_intersection_of_every_pair_of_LCs_is_the_LC_of_the_meet():
         meet       = fv.meet_specification(a,b)
         lcMeet     = fv.lower_closure(meet)
         lcMeets    = fv.stack_to_set(lcMeet)
-        assert cap == lcMeets, f"{i}:{a},{b}\n{cap}\n{lcMeets}"        
+        assert cap == lcMeets, f"{i}:{a},{b}\n{cap}\n{lcMeets}"
+
+# basic properties of UPPER CLOSURES of the specification semilattice
+
+def test_every_uc_defines_a_bounded_meet_semilattice():
+    for i,v in enumerate(all3Vecs):
+        uc = fv.upper_closure(v)
+        assert fv.is_bounded_meet_semilattice(uc), f"{i}:{v}\n{uc}"
+
+def test_NOT_every_uc_defines_a_join_semilattice():
+    does_not_define_a_jsl = []
+    for i,v in enumerate(all3Vecs):
+        uc = fv.upper_closure(v)
+        if not fv.is_join_semilattice(uc):#, f"{i}:{v}\n{uc}"
+            does_not_define_a_jsl.append(v)
+    assert len(does_not_define_a_jsl) > 0
+
+def test_NOT_every_uc_defines_a_distributive_meet_semilattice():
+    does_not_define_a_dmsl = []
+    for i,v in enumerate(all3Vecs):
+        uc = fv.upper_closure(v)
+        if not fv.meet_semilattice_is_distributive(uc):#, f"{i}:{v}\n{uc}"
+            does_not_define_a_dmsl.append(v)
+    assert len(does_not_define_a_dmsl) > 0
+
+def test_intersection_of_every_pair_of_UCs_is_the_UC_of_the_join():
+    for i,(a,b) in enumerate([(a,b) for a in all3Vecs for b in all3Vecs]):
+        ucA,  ucB  = fv.upper_closure(a) , fv.upper_closure(b)
+        ucAs, ucBs = fv.stack_to_set(ucA), fv.stack_to_set(ucB)
+        cap        = ucAs.intersection(ucBs)
+        join       = fv.join_specification(a,b)
+        if join is not None:
+            ucJoin     = fv.upper_closure(join)
+            ucJoins    = fv.stack_to_set(ucJoin)
+            assert cap == ucJoins, f"{i}:{a},{b}\n{cap}\n{ucJoins}"
+        else:
+            assert len(cap) == 0, f"{i}:{a},{b}\n{cap}"
 
 
 def test_not_every_left_inverse_is_a_lower_closure():
