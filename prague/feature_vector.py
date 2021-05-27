@@ -1574,12 +1574,13 @@ def meet_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
             ucxS = stack_to_set(ucx)
             allPairs  = {(aPrime, bPrime) for aPrime in ucxS for bPrime in ucxS}
             solutions = set()
-            for aPrime, bPrime in allPairs:
-                aLTEaPrime = lte_specification(a, aPrime)
-                bLTEbPrime = lte_specification(b, bPrime)
+            for aPrimeWrapped, bPrimeWrapped in allPairs:
+                aPrime, bPrime = aPrimeWrapped.unwrap(), bPrimeWrapped.unwrap()
+                aLTEaPrime     = lte_specification(a, aPrime)
+                bLTEbPrime     = lte_specification(b, bPrime)
                 xIsMeetAPrimeBprime = np.array_equal(x, meet_specification(aPrime, bPrime))
                 if aLTEaPrime and bLTEbPrime and xIsMeetAPrimeBprime:
-                    solutions.add((aPrime, bPrime))
+                    solutions.add((aPrimeWrapped, bPrimeWrapped))
                 if len(solutions) > 0:
                     break
             if len(solutions) == 0:
@@ -1611,14 +1612,15 @@ def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
                 lcxS = stack_to_set(lcx)
                 allPairs  = {(aPrime, bPrime) for aPrime in lcxS for bPrime in lcxS}
                 solutions = set()
-                for aPrime, bPrime in allPairs:
+                for aPrimeWrapped, bPrimeWrapped in allPairs:
+                    aPrime, bPrime   = aPrimeWrapped.unwrap(), bPrimeWrapped.unwrap()
                     aPrimeLTEa       = lte_specification(aPrime, a)
                     bPrimeLTEb       = lte_specification(bPrime, b)
                     aPrimeJoinbPrime = join_specification(aPrime, bPrime)
                     if aPrimeJoinbPrime is not None:
                         xIsJoinAPrimeBprime = np.array_equal(x, aPrimeJoinbPrime)
                         if aPrimeLTEa and bPrimeLTEb and xIsJoinAPrimeBprime:
-                            solutions.add((aPrime, bPrime))
+                            solutions.add((aPrimeWrapped, bPrimeWrapped))
                     if len(solutions) > 0:
                         break
                 if len(solutions) == 0:
