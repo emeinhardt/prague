@@ -473,6 +473,9 @@ def test_priority_union_left_does_NOT_preserve_joins():
     prunion_pres_join_cxs_left = grand_union(prunion_pres_join_cxs_lefts)
     assert len(prunion_pres_join_cxs_left) > 0#, f"{prunion_pres_join_cxs_left}"
 
+
+# properties of LEFT INVERSE
+
 def test_not_every_left_inverse_is_a_lower_closure():
     counterexamples = set()
     def left_inverse_is_a_lower_closure(i,a,b,c):
