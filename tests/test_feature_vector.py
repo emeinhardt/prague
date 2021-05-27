@@ -3,7 +3,10 @@
 import pytest
 import numpy as np
 import prague.feature_vector as fv
-import funcy
+from funcy import lmap
+from functools import reduce
+
+grand_union = lambda sets: reduce(set.union, sets, set())
 
 INT8 = np.int8
 
@@ -185,6 +188,9 @@ def test_ints_to_trits():
 all3Vecs = np.array([[x,y,z] for x in {+1, 0,-1} 
                              for y in {+1, 0,-1} 
                              for z in {+1, 0,-1}], dtype=INT8)
+all3VecsSet = fv.stack_to_set(all3Vecs)
+all3VecPairsSet = {(a,b) for a in all3VecsSet for b in all3VecsSet}
+all3VecTriplesSet = {(a,b,c) for a in all3VecsSet for b in all3VecsSet for c in all3VecsSet}
 
 
 #######################################
@@ -220,9 +226,9 @@ def test_join_specification_stack_implementations_eq():
 all3VecIO = [(a,b,fv.priority_union(a,b)) for a in all3Vecs for b in all3Vecs]
 
 
-################################################
-# left/right inverse of priority union testing #
-################################################
+###############################################################
+# left/right inverse of priority union implementation testing #
+###############################################################
 
 def test_priority_union_left_inverse_actual_is_expected_to_be_possible():
     for i,(a,b,c) in enumerate(all3VecIO):
@@ -270,11 +276,11 @@ def test_priority_union_right_inverse_implementations_are_eq():
 
 
 
-# allLC3sNaive = set(funcy.lmap(fv.HashableArray,
+# allLC3sNaive = set(lmap(fv.HashableArray,
 #                               [fv.lower_closure(v) for v in all3Vecs]))
-allLC3sCompressed = set(funcy.lmap(lambda M: frozenset(fv.stack_to_set(M)),
+allLC3sCompressed = set(lmap(lambda M: frozenset(fv.stack_to_set(M)),
                                    [fv.lower_closure(v) for v in all3Vecs]))
-allUC3sCompressed = set(funcy.lmap(lambda M: frozenset(fv.stack_to_set(M)),
+allUC3sCompressed = set(lmap(lambda M: frozenset(fv.stack_to_set(M)),
                                    [fv.upper_closure(v) for v in all3Vecs]))
 
 
@@ -310,9 +316,9 @@ def test_all_pfvs_together_do_NOT_form_a_distributive_meet_semilattice():
     is_dist = fv.meet_semilattice_is_distributive(all3Vecs)
     # if not is_dist:
     #     cxsWrapped = fv.meet_semilattice_is_distributive(all3Vecs, True)
-    #     cxs        = funcy.lmap(lambda abx: funcy.lmap(lambda v: v.unwrap(), list(abx)), 
+    #     cxs        = lmap(lambda abx: lmap(lambda v: v.unwrap(), list(abx)), 
     #                             list(cxsWrapped))
-    #     cxsPretty = funcy.lmap(lambda abx: f"{abx[2]} ≤ {abx[0]} ∧ {abx[1]} but a',b' dne",
+    #     cxsPretty = lmap(lambda abx: f"{abx[2]} ≤ {abx[0]} ∧ {abx[1]} but a',b' dne",
     #                            cxs)
     #     print("\n".join(cxsPretty))
     assert not is_dist
