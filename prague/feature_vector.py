@@ -1774,6 +1774,10 @@ def distribution_un_bin(un_op_f, bin_op_g, M, eq=None, returnCounterexamples=Fal
     
     By default this returns a boolean. If returnCounterexamples=True, it returns
     the (possibly empty) set of counterexamples found instead.
+
+    NB If f or g are partial, then any a,b where 
+      - f(g(a,b)) exists but g(f(a), f(b)) does not (or vice versa)
+    is considered a counterexample to f distributing over g.
     '''
     if eq is None:
         eq = np.array_equal
@@ -1781,16 +1785,49 @@ def distribution_un_bin(un_op_f, bin_op_g, M, eq=None, returnCounterexamples=Fal
     allPairs = {(a,b) for a in Ms for b in Ms}
     counterexamples = set()
     for aWrapped, bWrapped in allPairs:
-        a,b = aWrapped.unwrap(), bWrapped.unwrap()
-        gab = bin_op_g(a,b)
-        fa  = un_op_f(a)
-        fb  = un_op_f(b)
-        if gab is not None and fa is not None and fb is not None:
-            fgab = un_op_f(gab)
+        reasons = []
+        a,b     = aWrapped.unwrap(), bWrapped.unwrap()
+        gab     = bin_op_g(a,b)
+        fa      = un_op_f(a)
+        fb      = un_op_f(b)
+
+        reasons_gfafb_is_not_calculable = []
+        if fa is None:
+            reasons_gfafb_is_not_calculable.append(f"f({a}) dne")
+        if fb is None:
+            reasons_gfafb_is_not_calculable.append(f"f({b}) dne")
+        if fa is not None and fb is not None:
             gfafb = bin_op_g(fa, fb)
-            if fgab is not None and gfafb is not None:
-                if not eq(gfafb, fgab):
-                    counterexamples.add((aWrapped,bWrapped, f"f(g({a},{b})) = f({gab}) = {fgab} ≠ {gfafb} = g({fa},{fb}) = g(f({a}), f({b}))"))
+            if gfafb is None:
+                reasons_gfafb_is_not_calculable.append(f"g(f({a}),f({b})) dne")
+        
+        reasons_fgab_is_not_calculable = []
+        if gab is None:
+            reasons_fgab_is_not_calculable.append(f"g({a},{b}) dne")
+        else:
+            fgab = un_op_f(gab)
+            if fgab is None:
+                reasons_fgab_is_not_calculable.append(f"f(g({a},{b})) dne")
+        
+        if len(reasons_gfafb_is_not_calculable) == 0 and len(reasons_fgab_is_not_calculable) > 0:
+            assert gfafb is not None
+            assert fgab  is     None
+            reasons.append(f"g(f({a},f({b})) exists but f(g({a},{b})) dne")
+            reasons.extend(reasons_fgab_is_not_calculable)
+            counterexamples.add((aWrapped, bWrapped, tuple(reasons)))
+        elif len(reasons_gfafb_is_not_calculable) > 0 and len(reasons_fgab_is_not_calculable) == 0:
+            assert gfafb is     None
+            assert fgab  is not None
+            reasons.append(f"f(g({a},{b})) exists but g(f({a},f({b})) dne")
+            reasons.extend(reasons_gfafb_is_not_calculable)
+            counterexamples.add((aWrapped, bWrapped, tuple(reasons)))
+        elif len(reasons_gfafb_is_not_calculable) == 0 and len(reasons_fgab_is_not_calculable) == 0:
+            assert gfafb is not None
+            assert fgab  is not None
+            if not eq(gfafb, fgab):
+                counterexamples.add((aWrapped,bWrapped, f"f(g({a},{b})) = f({gab}) = {fgab} ≠ {gfafb} = g({fa},{fb}) = g(f({a}), f({b}))"))
+        else:
+            pass
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1808,6 +1845,10 @@ def left_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexamp
     
     By default this returns a boolean. If returnCounterexamples=True, it returns
     the (possibly empty) set of counterexamples found instead.
+
+    NB If f or g are partial, then any a,b,c where 
+      - f(a, g(b,c)) exists but g(f(a,b), f(a,c)) does not (or vice versa)
+    is considered a counterexample to f distributing over g from the left.
     '''
     if eq is None:
         eq = np.array_equal
@@ -1815,20 +1856,48 @@ def left_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexamp
     allTriples = {(a,b,c) for a in Ms for b in Ms for c in Ms}
     counterexamples = set()
     for aWrapped, bWrapped, cWrapped in allTriples:
-        a,b,c = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
-        bGc = bin_op_g(b,c)
-        aFb = bin_op_f(a,b)
-        aFc = bin_op_f(a,c)
+        a,b,c   = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
+        reasons = []
+        bGc     = bin_op_g(b,c)
+        aFb     = bin_op_f(a,b)
+        aFc     = bin_op_f(a,c)
         aFbgc   = bin_op_f(a,bGc) if bGc is not None else None
         afbGafc = bin_op_g(aFb, aFc) if (aFb is not None) and (aFc is not None) else None
-        if (aFbgc is not None and afbGafc is None) or (aFbgc is None and afbGafc is not None) or (not eq(aFbgc, afbGafc)):
-            counterexamples.add((aWrapped,bWrapped,cWrapped, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
-        # if bGc is not None and aFb is not None and aFc is not None:
-        #     aFbgc   = bin_op_f(a,bGc)
-        #     afbGafc = bin_op_g(aFb, aFc)
-        #     if aFbgc is not None and afbGafc is not None:
-        #         if not eq(aFbgc, afbGafc):
-        #             counterexamples.add((aWrapped,bWrapped,cWrapped, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
+        
+        reasons_aFbgc_is_not_calculable = []
+        if bGc is None:
+            reasons_aFbgc_is_not_calculable.append(f"g({b},{c}) dne")
+        else:
+            if aFbgc is None:
+                reasons_aFbgc_is_not_calculable.append(f"g({b},{c}) exists but f({a},g({b},{c})) dne")
+
+        reasons_afbGafc_is_not_calculable = []
+        if aFb is None:
+            reasons_afbGafc_is_not_calculable.append(f"f({a},{b}) dne")
+        if aFc is None:
+            reasons_afbGafc_is_not_calculable.append(f"f({a},{c}) dne")
+        if (aFb is not None) and (aFc is not None) and (afbGafc is None):
+            reasons_afbGafc_is_not_calculable.append(f"f({a},{b}), f({a},{c}) exist but g(f({a},{b}), f({a},{c})) dne")
+        
+        if len(reasons_aFbgc_is_not_calculable) > 0 and len(reasons_afbGafc_is_not_calculable) == 0:
+            assert aFbgc   is     None
+            assert afbGafc is not None
+            reasons.append(f"g(f({a},{b}), f({a},{c})) exists but f({a},g({b},{c})) dne")
+            reasons.extend(reasons_aFbgc_is_not_calculable)
+            counterexamples.add((aWrapped,bWrapped,cWrapped,tuple(reasons)))
+        elif len(reasons_aFbgc_is_not_calculable) == 0 and len(reasons_afbGafc_is_not_calculable) > 0:
+            assert aFbgc   is not None
+            assert afbGafc is     None
+            reasons.append(f"f({a},g({b},{c})) exists but g(f({a},{b}), f({a},{c})) dne")
+            reasons.extend(reasons_afbGafc_is_not_calculable)
+            counterexamples.add((aWrapped,bWrapped,cWrapped,tuple(reasons)))
+        elif len(reasons_aFbgc_is_not_calculable) == 0 and len(reasons_afbGafc_is_not_calculable) == 0:
+            assert aFbgc   is not None
+            assert afbGafc is not None
+            if not eq(aFbgc, afbGafc):
+                counterexamples.add((aWrapped,bWrapped,cWrapped, f"f({a},g({b},{c})) = f({a}, {bGc}) = {aFbgc} ≠ {afbGafc} = g({aFb}, {aFc}) = g(f({a},{b}),f({a},{c}))"))
+        else:
+            pass
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1846,6 +1915,10 @@ def right_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexam
     
     By default this returns a boolean. If returnCounterexamples=True, it returns
     the (possibly empty) set of counterexamples found instead.
+
+    NB If f or g are partial, then any a,b,c where 
+      - f(g(b,c), a) exists but g(f(b,a), f(c,a)) does not (or vice versa)
+    is considered a counterexample to f distributing over g from the right.
     '''
     if eq is None:
         eq = np.array_equal
@@ -1853,20 +1926,47 @@ def right_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexam
     allTriples = {(a,b,c) for a in Ms for b in Ms for c in Ms}
     counterexamples = set()
     for aWrapped, bWrapped, cWrapped in allTriples:
-        a,b,c = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
-        bGc = bin_op_g(b,c)
-        bFa = bin_op_f(b,a)
-        cFa = bin_op_f(c,a)
+        reasons = []
+        a,b,c   = aWrapped.unwrap(), bWrapped.unwrap(), cWrapped.unwrap()
+        bGc     = bin_op_g(b,c)
+        bFa     = bin_op_f(b,a)
+        cFa     = bin_op_f(c,a)
         bgcFa   = bin_op_f(bGc, a) if bGc is not None else None
         bfaGcfa = bin_op_g(bFa, cFa) if (bFa is not None and cFa is not None) else None
-        if (bgcFa is not None and bfaGcfa is None) or (bgcFa is None and bfaGcfa is not None) or (not eq(bgcFa, bfaGcfa)):
-            counterexamples.add((aWrapped,bWrapped,cWrapped, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
-        # if bGc is not None and bFa is not None and cFa is not None:
-        #     bgcFa   = bin_op_f(bGc, a)
-        #     bfaGcfa = bin_op_g(bFa, cFa)
-        #     if bgcFa is not None and bfaGcfa is not None:
-        #         if not eq(bgcFa, bfaGcfa):
-        #             counterexamples.add((aWrapped,bWrapped,cWrapped, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
+
+        reasons_bgcFa_is_not_calculable = []
+        if bGc is None:
+            reasons_bgcFa_is_not_calculable.append(f"g({b},{c}) dne")
+        elif bgcFa is None:
+            reasons_bgcFa_is_not_calculable.append(f"g({b},{c}) exists but f(g({b},{c}),{a}) dne")
+
+        reasons_bfaGcfa_is_not_calculable = []
+        if bFa is None:
+            reasons_bfaGcfa_is_not_calculable.append(f"f({b},{a}) dne")
+        if cFa is None:
+            reasons_bfaGcfa_is_not_calculable.append(f"f({c},{a}) dne")
+        if (bFa is not None) and (cFa is not None) and (bfaGcfa is None):
+            reasons_bfaGcfa_is_not_calculable.append(f"f({b},{a}), f({c},{a}) exist but g(f({b},{a}),f({c},{a})) dne")
+
+        if len(reasons_bgcFa_is_not_calculable) == 0 and len(reasons_bfaGcfa_is_not_calculable) > 0:
+            assert bgcFa   is not None
+            assert bfaGcfa is     None
+            reasons.append(f"f(g({b},{c}),{a}) exists but g(f({b},{a}),f({c},{a})) dne")
+            reasons.extend(reasons_bfaGcfa_is_not_calculable)
+            counterexamples.add((aWrapped,bWrapped,cWrapped, tuple(reasons)))
+        elif len(reasons_bgcFa_is_not_calculable) > 0 and len(reasons_bfaGcfa_is_not_calculable) == 0:
+            assert bgcFa   is     None
+            assert bfaGcfa is not None
+            reasons.append(f"g(f({b},{a}),f({c},{a})) exists but f(g({b},{c}),{a}) dne")
+            reasons.extend(reasons_bgcFa_is_not_calculable)
+            counterexamples.add((aWrapped,bWrapped,cWrapped, tuple(reasons)))
+        elif len(reasons_bgcFa_is_not_calculable) == 0 and len(reasons_bfaGcfa_is_not_calculable) == 0:
+            assert bgcFa   is not None
+            assert bfaGcfa is not None
+            if not eq(bgcFa, bfaGcfa):
+                counterexamples.add((aWrapped,bWrapped,cWrapped, f"f(g({b},{c}), {a}) = f({bGc}, {a}) = {bgcFa} ≠ {bfaGcfa} = g({bFa}, {cFa}) = g(f({b},{a}),f({c},{a}))"))
+        else:
+            pass
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1874,86 +1974,187 @@ def right_distribution_bin_bin(bin_op_f, bin_op_g, M, eq=None, returnCounterexam
 
 def preserves_partial_order(po_stack, op, returnCounterexamples=False):
     '''
-    Given a stack of pfvs and a function to/from pfvs, this checks whether the
-    image of this function preserves the partial ordering relation of the stack,
-    i.e. whether
+    Given a stack of pfvs and a (unary) function to/from pfvs, this checks 
+    whether the image of this function preserves the partial ordering relation 
+    of the stack, i.e. whether
       a ≤ b ⇒ f(a) ≤ f(b)
-    holds with respect to the input stack elements.
+    holds with respect to the input stack elements ≡ whether f is *monotone*.
 
     By default, this returns a boolean. If returnCounterexamples=True, then this
     returns a (possibly empty) set of counterexamples found.
+
+    NB if the function is partial, then any a,b where at least one of
+     - f(a)
+     - f(b)
+    does not exist is considered a counterexample to the function preserving
+    order.
     '''
     # po_stack = hashableArrays_to_stack(po_set)
     po_set = stack_to_set(po_stack)
     allPairs = {(a,b) for a in po_set for b in po_set}
     counterexamples = set()
     for aWrapped, bWrapped in allPairs:
-        a,   b = aWrapped.unwrap(), bWrapped.unwrap()
-        comp_before = lte_specification( a,  b)
-        fa, fb = op(a), op(b)
-        comp_after  = lte_specification(fa, fb)
-        if not (comp_before == comp_after):
-            counterexamples.add(((aWrapped         , bWrapped         , comp_before), 
-                                 (HashableArray(fa), HashableArray(fb), comp_after)))
+        a,   b       = aWrapped.unwrap(), bWrapped.unwrap()
+        aLTEb_before = lte_specification(a, b)
+        fa, fb       = op(a), op(b)
+        if (fa is None) or (fb is None):
+            counterexamples.add(((aWrapped, 
+                                  bWrapped, 
+                                  aLTEb_before), 
+                                 (HashableArray(fa) if fa is not None else None, 
+                                  HashableArray(fb) if fb is not None else None, 
+                                  None)))
+        else:
+            aLTEb_after = lte_specification(fa, fb)
+            if aLTEb_before and not aLTEb_after:
+                counterexamples.add(((aWrapped        , bWrapped         , aLTEb_before), 
+                                     (HashableArray(fa), HashableArray(fb), aLTEb_after)))
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
 
 
-def preserves_meet(sl_stack, op, returnCounterexamples=False):
+def preserves_meet(M, op, returnCounterexamples=False):
     '''
-    Given a stack of pfvs and a function to/from pfvs, this checks whether the
-    function preserves meets, i.e. whether
+    Given a stack of pfvs and a (unary) function to/from pfvs, this checks 
+    whether the function preserves meets, i.e. whether
       f(a) ∧ f(b) = f(a ∧ b)
     holds with respect to the input stack elements.
 
     By default, this returns a boolean. If returnCounterexamples=True, then this
     returns a (possibly empty) set of counterexamples found.
+
+    NB if the function is partial, then any a,b such that any of
+     - f(a)
+     - f(b)
+     - f(a ∧ b)
+    do not exist is considered a counterexample to meet being preserved.
     '''
-    # sl_stack = hashableArrays_to_stack(sl_set)
-    sl_set = stack_to_set(sl_stack)
-    allPairs = {(a,b) for a in sl_set for b in sl_set}
+    # M = hashableArrays_to_stack(Ms)
+    Ms = stack_to_set(M)
+    allPairs = {(a,b) for a in Ms for b in Ms}
     counterexamples = set()
     for aWrapped, bWrapped in allPairs:
-        a,   b   = aWrapped.unwrap(), bWrapped.unwrap()
-        m_before = meet_specification( a,  b)
+        reasons    = []
+        a,   b     = aWrapped.unwrap(), bWrapped.unwrap()
+        m_before   = meet_specification( a,  b)
         f_m_before = op(m_before)
-        fa, fb   = op(a), op(b)
-        m_after  = meet_specification(fa, fb)
-        if not np.array_equal(f_m_before, m_after):
-            counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
-                                 (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
+        fa, fb     = op(a), op(b)
+        m_after    = meet_specification(fa, fb) if (fa is not None) and (fb is not None) else None
+
+        reasons_faMb_is_not_calculable = []
+        if f_m_before is None:
+            reasons_faMb_is_not_calculable.append(f"f({a} ∧ {b}) dne")
+        
+        reasons_faMfb_is_not_calculable = []
+        if fa is None:
+            reasons_faMfb_is_not_calculable.append(f"f({a}) dne")
+        if fb is None:
+            reasons_faMfb_is_not_calculable.append(f"f({b}) dne")
+
+        if len(reasons_faMb_is_not_calculable) == 0 and len(reasons_faMfb_is_not_calculable) > 0:
+            assert f_m_before is not None
+            assert m_after    is     None
+            reasons.append(f"f({a} ∧ {b}) exists but f({a}) ∧ f({b}) dne")
+            reasons.extend(reasons_faMfb_is_not_calculable)
+            counterexamples.add(((aWrapped, bWrapped, HashableArray(m_before), HashableArray(f_m_before)), 
+                                 (HashableArray(fa) if fa is not None else None, HashableArray(fb) if fb is not None else None),
+                                 tuple(reasons)))
+        elif len(reasons_faMb_is_not_calculable) > 0 and len(reasons_faMfb_is_not_calculable) == 0:
+            assert f_m_before is     None
+            assert m_after    is not None
+            reasons.append(f"f({a}) ∧ f({b}) exists but f({a} ∧ {b}) dne")
+            reasons.extend(reasons_faMb_is_not_calculable)
+            counterexamples.add(((aWrapped, bWrapped, HashableArray(m_before)), 
+                                 (HashableArray(fa), HashableArray(fb), HashableArray(m_after)),
+                                 tuple(reasons)))
+        elif len(reasons_faMb_is_not_calculable) == 0 and len(reasons_faMfb_is_not_calculable) == 0:
+            assert f_m_before is not None
+            assert m_after    is not None
+            if not np.array_equal(f_m_before, m_after):
+                counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
+                                     (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
+        else:
+            pass
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
 
 
-def preserves_join(sl_stack, op, returnCounterexamples=False):
+def preserves_join(M, op, returnCounterexamples=False):
     '''
-    Given a stack of pfvs and a function to/from pfvs, this checks whether the
-    function preserves joins, i.e. whether
+    Given a stack of pfvs and a (unary) function to/from pfvs, this checks 
+    whether the function preserves joins, i.e. whether
       f(a) ∨ f(b) = f(a ∨ b)
     holds with respect to the input stack elements.
 
     By default, this returns a boolean. If returnCounterexamples=True, then this
     returns a (possibly empty) set of counterexamples found.
+
+    NB if the function is partial, then any a,b such that any of
+     - f(a)
+     - f(b)
+     - f(a ∨ b)
+    do not exist is considered a counterexample to join being preserved.
     '''
-    # sl_stack = hashableArrays_to_stack(sl_set)
-    sl_set = stack_to_set(sl_stack)
-    allPairs = {(a,b) for a in sl_set for b in sl_set}
+    # M = hashableArrays_to_stack(Ms)
+    Ms = stack_to_set(M)
+    allPairs = {(a,b) for a in Ms for b in Ms}
     counterexamples = set()
     for aWrapped, bWrapped in allPairs:
-        a,   b   = aWrapped.unwrap(), bWrapped.unwrap()
-        m_before = join_specification( a,  b)
-        f_m_before = op(m_before) if m_before is not None else None
-        fa, fb   = op(a), op(b)
-        m_after  = join_specification(fa, fb)
-        if f_m_before is not None and m_after is None:
-            counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
-                                 (HashableArray(fa), HashableArray(fb), m_after)))
-        if f_m_before is not None and m_after is not None and not np.array_equal(f_m_before, m_after):
-            counterexamples.add(((aWrapped         , bWrapped         , HashableArray(m_before), HashableArray(f_m_before)), 
-                                 (HashableArray(fa), HashableArray(fb), HashableArray(m_after))))
+        reasons    = []
+        a,   b     = aWrapped.unwrap(), bWrapped.unwrap()
+        j_before   = join_specification( a,  b)
+        f_j_before = op(j_before) if j_before is not None else None
+        fa, fb     = op(a), op(b)
+        j_after    = join_specification(fa, fb) if (fa is not None) and (fb is not None) else None
+
+        reasons_faJb_is_not_calculable = []
+        if j_before is None:
+            reasons_faJb_is_not_calculable.append(f"{a} ∨ {b} dne")
+        if (j_before is not None) and f_j_before is None:
+            reasons_faJb_is_not_calculable.append(f"{a} ∨ {b} exists but f({a} ∨ {b}) dne")
+        
+        reasons_faJfb_is_not_calculable = []
+        if fa is None:
+            reasons_faJfb_is_not_calculable.append(f"f({a}) dne")
+        if fb is None:
+            reasons_faJfb_is_not_calculable.append(f"f({b}) dne")
+        if (fa is not None) and (fb is not None) and j_after is None:
+            reasons_faJfb_is_not_calculable.append(f"f({a}), f({b}) exist but f({a}) ∨ f({b}) dne")
+
+        if len(reasons_faJb_is_not_calculable) == 0 and len(reasons_faJfb_is_not_calculable) > 0:
+            assert f_j_before is not None
+            assert j_after    is     None
+            reasons.append(f"f({a} ∨ {b}) exists but f({a}) ∨ f({b}) dne")
+            reasons.extend(reasons_faJfb_is_not_calculable)
+            counterexamples.add(((aWrapped, 
+                                  bWrapped, 
+                                  HashableArray(j_before) if j_before is not None else None, 
+                                  HashableArray(f_j_before) if f_j_before is not None else None), 
+                                 (HashableArray(fa) if fa is not None else None, 
+                                  HashableArray(fb) if fb is not None else None),
+                                 tuple(reasons)))
+        elif len(reasons_faJb_is_not_calculable) > 0 and len(reasons_faJfb_is_not_calculable) == 0:
+            assert f_j_before is     None
+            assert j_after    is not None
+            reasons.append(f"f({a}) ∨ f({b}) exists but f({a} ∨ {b}) dne")
+            reasons.extend(reasons_faJb_is_not_calculable)
+            counterexamples.add(((aWrapped, 
+                                  bWrapped, 
+                                  HashableArray(j_before) if j_before is not None else None), 
+                                 (HashableArray(fa) if fa is not None else None, 
+                                  HashableArray(fb) if fb is not None else None, 
+                                  HashableArray(j_after) if j_after is not None else None),
+                                 tuple(reasons)))
+        elif len(reasons_faJb_is_not_calculable) == 0 and len(reasons_faJfb_is_not_calculable) == 0:
+            assert f_j_before is not None
+            assert j_after    is not None
+            if not np.array_equal(f_j_before, j_after):
+                counterexamples.add(((aWrapped         , bWrapped         , HashableArray(j_before), HashableArray(f_j_before)), 
+                                     (HashableArray(fa), HashableArray(fb), HashableArray(j_after))))
+        else:
+            pass
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
