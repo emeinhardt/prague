@@ -391,6 +391,87 @@ def test_intersection_of_every_pair_of_UCs_is_the_UC_of_the_join():
         else:
             assert len(cap) == 0, f"{i}:{a},{b}\n{cap}"
 
+# properties of PRIORITY UNION
+
+def test_priority_union_does_NOT_left_distribute_over_meet():
+    left_dist_prunion_meet_cxs = fv.left_distribution_bin_bin(fv.priority_union, fv.meet_specification, all3Vecs, returnCounterexamples=True)
+    assert len(left_dist_prunion_meet_cxs) > 0
+
+def test_priority_union_right_distributes_over_meet():
+    right_dist_prunion_meet_cxs = fv.right_distribution_bin_bin(fv.priority_union, fv.meet_specification, all3Vecs, returnCounterexamples=True)
+    assert len(right_dist_prunion_meet_cxs) == 0, f"{right_dist_prunion_meet_cxs}"
+
+def test_priority_union_does_NOT_left_distribute_over_join():
+    left_dist_prunion_join_cxs = fv.left_distribution_bin_bin(fv.priority_union, fv.join_specification, all3Vecs, returnCounterexamples=True)
+    assert len(left_dist_prunion_join_cxs) > 0
+
+def test_priority_union_does_NOT_right_distribute_over_join():
+    right_dist_prunion_join_cxs = fv.right_distribution_bin_bin(fv.priority_union, fv.join_specification, all3Vecs, returnCounterexamples=True)
+    assert len(right_dist_prunion_join_cxs) > 0
+
+def test_priority_union_right_preserves_partial_order():
+    prunion_pres_po_cxs_rights = []
+    for xWrapped in all3VecsSet:
+        x = xWrapped.unwrap()
+        leftArg  = lambda left:  fv.priority_union(left, x)
+        current_prunion_pres_po_cxs_right = fv.preserves_partial_order(all3Vecs, leftArg, returnCounterexamples=True)
+        prunion_pres_po_cxs_rights.append(current_prunion_pres_po_cxs_right)
+    prunion_pres_po_cxs_right = grand_union(prunion_pres_po_cxs_rights)
+    assert len(prunion_pres_po_cxs_right) == 0, f"{prunion_pres_po_cxs_right}"
+
+def test_priority_union_left_does_NOT_preserve_partial_order():
+    prunion_pres_po_cxs_lefts = []
+    for xWrapped in all3VecsSet:
+        x = xWrapped.unwrap()
+        rightArg  = lambda right:  fv.priority_union(x, right)
+        current_prunion_pres_po_cxs_left = fv.preserves_partial_order(all3Vecs, rightArg, returnCounterexamples=True)
+        prunion_pres_po_cxs_lefts.append(current_prunion_pres_po_cxs_left)
+    prunion_pres_po_cxs_left = grand_union(prunion_pres_po_cxs_lefts)
+    assert len(prunion_pres_po_cxs_left) > 0
+
+# NB preserving meets entails preserving order
+def test_priority_union_right_preserves_meets():
+    prunion_pres_meet_cxs_rights = []
+    for xWrapped in all3VecsSet:
+        x = xWrapped.unwrap()
+        leftArg  = lambda left:  fv.priority_union(left, x)
+        current_prunion_pres_meet_cxs_right = fv.preserves_meet(all3Vecs, leftArg, returnCounterexamples=True)
+        prunion_pres_meet_cxs_rights.append(current_prunion_pres_meet_cxs_right)
+    prunion_pres_meet_cxs_right = grand_union(prunion_pres_meet_cxs_rights)
+    assert len(prunion_pres_meet_cxs_right) == 0, f"{prunion_pres_meet_cxs_right}"
+
+# NB preserving meets entails preserving order
+def test_priority_union_left_does_NOT_preserve_meets():
+    prunion_pres_meet_cxs_lefts = []
+    for xWrapped in all3VecsSet:
+        x = xWrapped.unwrap()
+        rightArg  = lambda right:  fv.priority_union(x, right)
+        current_prunion_pres_meet_cxs_left = fv.preserves_meet(all3Vecs, rightArg, returnCounterexamples=True)
+        prunion_pres_meet_cxs_lefts.append(current_prunion_pres_meet_cxs_left)
+    prunion_pres_meet_cxs_left = grand_union(prunion_pres_meet_cxs_lefts)
+    assert len(prunion_pres_meet_cxs_left) > 0#, f"{prunion_pres_meet_cxs_left}"
+
+# NB preserving joins entails preserving order
+def test_priority_union_right_does_NOT_preserve_joins():
+    prunion_pres_join_cxs_rights = []
+    for xWrapped in all3VecsSet:
+        x = xWrapped.unwrap()
+        leftArg  = lambda left:  fv.priority_union(left, x)
+        current_prunion_pres_join_cxs_right = fv.preserves_join(all3Vecs, leftArg, returnCounterexamples=True)
+        prunion_pres_join_cxs_rights.append(current_prunion_pres_join_cxs_right)
+    prunion_pres_join_cxs_right = grand_union(prunion_pres_join_cxs_rights)
+    assert len(prunion_pres_join_cxs_right) > 0#, f"{prunion_pres_join_cxs_right}"
+
+# NB preserving joins entails preserving order
+def test_priority_union_left_does_NOT_preserve_joins():
+    prunion_pres_join_cxs_lefts = []
+    for xWrapped in all3VecsSet:
+        x = xWrapped.unwrap()
+        rightArg  = lambda right:  fv.priority_union(x, right)
+        current_prunion_pres_join_cxs_left = fv.preserves_join(all3Vecs, rightArg, returnCounterexamples=True)
+        prunion_pres_join_cxs_lefts.append(current_prunion_pres_join_cxs_left)
+    prunion_pres_join_cxs_left = grand_union(prunion_pres_join_cxs_lefts)
+    assert len(prunion_pres_join_cxs_left) > 0#, f"{prunion_pres_join_cxs_left}"
 
 def test_not_every_left_inverse_is_a_lower_closure():
     counterexamples = set()
