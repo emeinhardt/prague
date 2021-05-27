@@ -2160,6 +2160,183 @@ def preserves_join(M, op, returnCounterexamples=False):
     return len(counterexamples) == 0
 
 
+def preserves_min(M, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs and a (unary) function to/from pfvs, this checks 
+    whether the function preserves the minimum of the stack (if such a minimum 
+    exists), i.e. whether
+      f(min(stack)) = min(f[stack])
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the function does not preserve the 
+    minimum.
+
+    NB if the function is partial, then if at least one of
+     - f(min(stack))
+     - min(f[stack])
+    do not exist, then the minimum is considered to not be preserved.
+    '''
+    Ms            = stack_to_set(M)
+    glb           = min_of(M)
+    if glb is None:
+        if returnCounterexamples:
+            return set()
+        return True
+    glb_out       = op(glb) if glb is not None else None
+    if glb_out is None:
+        reasons = {(HashableArray(glb), f"f({glb}) dne")}
+        print(reasons)
+        if returnCounterexamples:
+            return reasons
+        return False
+    
+    Ms_out      = {HashableArray(v_out) 
+                   for v_out in [op(v.unwrap()) for v in Ms] 
+                   if v_out is not None}
+    M_out_stack = hashableArrays_to_stack(Ms_out)
+    
+    assert glb_out is not None
+    glb_M_out = min_of(M_out_stack)
+    if glb_M_out is None:
+        reasons = {(HashableArray(glb), HashableArray(glb_out), f"glb of image dne")}
+        print(reasons)
+        if returnCounterexamples:
+            return reasons
+        return False
+    else:
+        assert glb       is not None
+        assert glb_out   is not None
+        assert glb_M_out is not None
+        if np.array_equal(glb_out, glb_M_out):
+            if returnCounterexamples:
+                return set()
+            return True
+        else:
+            if returnCounterexamples:
+                return {(HashableArray(glb), HashableArray(glb_out), HashableArray(glb_M_out))}
+            return False
+
+
+def preserves_max(M, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs and a (unary) function to/from pfvs, this checks 
+    whether the function preserves the maximum of the stack (if such a maximum 
+    exists), i.e. whether
+      f(max(stack)) = max(f[stack])
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the function does not preserve the 
+    maximum.
+
+    NB if the function is partial, then if at least one of
+     - f(max(stack))
+     - max(f[stack])
+    do not exist, then the maximum is considered to not be preserved.
+    '''
+    Ms            = stack_to_set(M)
+    lub           = max_of(M)
+    if lub is None:
+        if returnCounterexamples:
+            return set()
+        return True
+    lub_out       = op(lub) if lub is not None else None
+    if lub_out is None:
+        reasons = {(HashableArray(lub), f"f({lub}) dne")}
+        print(reasons)
+        if returnCounterexamples:
+            return reasons
+        return False
+    
+    Ms_out      = {HashableArray(v_out) 
+                   for v_out in [op(v.unwrap()) for v in Ms] 
+                   if v_out is not None}
+    M_out_stack = hashableArrays_to_stack(Ms_out)
+    
+    assert lub_out is not None
+    lub_M_out = max_of(M_out_stack)
+    if lub_M_out is None:
+        reasons = {(HashableArray(lub), HashableArray(lub_out), f"lub of image dne")}
+        print(reasons)
+        if returnCounterexamples:
+            return reasons
+        return False
+    else:
+        assert lub       is not None
+        assert lub_out   is not None
+        assert lub_M_out is not None
+        if np.array_equal(lub_out, lub_M_out):
+            if returnCounterexamples:
+                return set()
+            return True
+        else:
+            if returnCounterexamples:
+                return {(HashableArray(lub), HashableArray(lub_out), HashableArray(lub_M_out))}
+            return False
+
+
+def is_meet_semilattice_homomorphism(M, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs forming a meet semilattice and a (unary) function 
+    to/from pfvs, this checks whether the function
+     - preserves meets
+     - preserves the maximum of the stack (if such a maximum exists)
+    with respect to the stack.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the function is not a meet semilattice
+    homomorphism.
+    '''
+    assert is_meet_semilattice(M), f"Input stack is not a meet semilattice:\n{M}"
+    preserves_meet_cxs = preserves_meet(M, op, returnCounterexamples=True)
+    preserves_lub_cxs  = preserves_max(M, op, returnCounterexamples=True)
+    cxs = preserves_meet_cxs.union(preserves_lub_cxs)
+    if returnCounterexamples:
+        return cxs
+    return len(cxs) == 0
+
+
+def is_join_semilattice_homomorphism(M, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs forming a join semilattice and a (unary) function 
+    to/from pfvs, this checks whether the function
+     - preserves joins
+     - preserves the minimum of the stack (if such a minimum exists)
+    with respect to the stack.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the function is not a join semilattice
+    homomorphism.
+    '''
+    assert is_join_semilattice(M), f"Input stack is not a join semilattice:\n{M}"
+    preserves_join_cxs = preserves_join(M, op, returnCounterexamples=True)
+    preserves_glb_cxs  = preserves_min(M, op, returnCounterexamples=True)
+    cxs = preserves_join_cxs.union(preserves_glb_cxs)
+    if returnCounterexamples:
+        return cxs
+    return len(cxs) == 0
+
+
+def is_lattice_homomorphism(M, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs forming a lattice and a (unary) function to/from pfvs,
+    this checks whether the function
+     - is a meet semilattice homomorphism
+     - is a join semilattice homomorphism
+    with respect to the stack.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the function is not a lattice 
+    homomorphism.
+    '''
+    assert is_lattice(M), f"Input stack is not a lattice:\n{M}"
+    msl_hm_cxs = is_meet_semilattice_homomorphism(M, op, returnCounterexamples=True)
+    jsl_hm_cxs = is_join_semilattice_homomorphism(M, op, returnCounterexamples=True)
+    cxs = msl_hm_cxs.union(jsl_hm_cxs)
+    if returnCounterexamples:
+        return cxs
+    return len(cxs) == 0
+
+
 def preserves_meet_semilattice(msl_stack, op, checkBound=False, returnCounterexamples=False):
     '''
     Given 
