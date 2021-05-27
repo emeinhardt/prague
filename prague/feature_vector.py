@@ -1742,7 +1742,7 @@ def is_complemented_lattice(l_stack, returnCounterexamples=False):
     for xWrapped in Ms:
         x      = xWrapped.unwrap()
         cStack = complement_search(x, l_stack)
-        cSet   = stack_to_set(c)
+        cSet   = stack_to_set(cStack)
         if len(cSet) == 0:
             counterexamples.add(xWrapped)
     if returnCounterexamples:
