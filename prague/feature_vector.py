@@ -1,6 +1,6 @@
 '''
 Contains functions for creating and manipulating NumPy ndarrays that represent
-(partial) binary feature vectors
+(partial) binary feature vectors = (balanced) ternary feature vectors.
 '''
 
 import numpy as np
@@ -1563,6 +1563,7 @@ def meet_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
     sl_stack. If returnCounterexamples is True, this instead returns the set of 
     counterexamples found.
     '''
+    assert is_meet_semilattice(sl_stack), f"stack must form meet semilattice:\n{sl_stack}"
     Ms = stack_to_set(sl_stack)
     counterexamples = set()
     allTriples = {(a,b,x) for a in Ms for b in Ms for x in Ms}
@@ -1600,6 +1601,7 @@ def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
     sl_stack. If returnCounterexamples is True, this instead returns the set of 
     counterexamples found.
     '''
+    assert is_join_semilattice(sl_stack), f"stack must form join semilattice:\n{sl_stack}"
     Ms = stack_to_set(sl_stack)
     counterexamples = set()
     allTriples = {(a,b,x) for a in Ms for b in Ms for x in Ms}
@@ -1625,6 +1627,8 @@ def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
                         break
                 if len(solutions) == 0:
                     counterexamples.add((aWrapped,bWrapped,xWrapped))
+        else:
+            raise Exception("stack must form join semilattice, but join is undefined: {a} ∨ {b} dne\nstack:{sl_stack}")
     if returnCounterexamples:
         return counterexamples
     return len(counterexamples) == 0
@@ -1641,6 +1645,7 @@ def is_lattice_distributive(l_stack, returnCounterexamples=False):
 
     NB distributivity of a lattice implies modularity.
     '''
+    assert is_lattice(l_stack), f"stack must form lattice:\n{l_stack}"
     Ms = stack_to_set(l_stack)
     allTriples = {(a,b,c) for a in Ms for b in Ms for c in Ms}
     counterexamples = set()
@@ -1667,6 +1672,7 @@ def is_lattice_modular(l_stack, returnCounterexamples=False):
     whether the lattice is modular. If returnCounterexamples=True, then
     this returns the (possibly empty) set of counterexamples found.
     '''
+    assert is_lattice(l_stack), f"stack must form lattice:\n{l_stack}"
     Ms = stack_to_set(l_stack)
     allPairs   = {(a,b) for a in Ms for b in Ms}
     counterexamples = set()
@@ -1695,6 +1701,7 @@ def complement_search(x, l_stack):
      - a ∨ c = join(lattice)
      - a ∧ c = meet(lattice)
     '''
+    assert is_bounded_lattice(l_stack), f"stack must form bounded lattice:\n{l_stack}"
     top = join_specification_stack(l_stack)
     bot = meet_specification(M=l_stack)
     Ms  = stack_to_set(l_stack)
@@ -1714,10 +1721,13 @@ def complement_exact(x, l_stack):
      - a ∨ c = join(lattice)
      - a ∧ c = meet(lattice)
     '''
+    assert is_bounded_lattice(l_stack), f"stack must form bounded lattice:\n{l_stack}"
     top = join_specification_stack(l_stack)
     bot = meet_specification(M=l_stack)
     justMin = diff(top,x)
     xJoinMin = join_specification(x,justMin)
+    if xJoinMin is None:
+        raise Exception(f"stack must form a lattice, but join was undefined:\n{x} ∨ {justMin} dne\nstack:{l_stack}")
     xMeetMin = meet_specification(x,justMin)
     assert np.array_equal(xJoinMin,top), f"{x}, {justMin} | {xJoinMin} ≠ {top}"
     assert np.array_equal(xMeetMin,bot), f"{x}, {justMin} | {xMeetMin} ≠ {bot}"
@@ -1737,6 +1747,7 @@ def is_complemented_lattice(l_stack, returnCounterexamples=False):
     returnCounterexamples=True, this returns the (possibly empty) set of 
     counterexamples instead.
     '''
+    assert is_bounded_lattice(l_stack), f"stack must form bounded lattice:\n{l_stack}"
     Ms = stack_to_set(l_stack)
     counterexamples = set()
     for xWrapped in Ms:
