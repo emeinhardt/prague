@@ -1578,7 +1578,7 @@ def is_antichain(M):
     return True
 
 
-def meet_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
+def is_meet_semilattice_distributive(sl_stack, returnCounterexamples=False):
     '''
     Given a set M of pfvs that form a meet semilattice, M is a *distributive* iff
     for all a, b, x
@@ -1616,7 +1616,7 @@ def meet_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
     return len(counterexamples) == 0
 
 
-def join_semilattice_is_distributive(sl_stack, returnCounterexamples=False):
+def is_join_semilattice_distributive(sl_stack, returnCounterexamples=False):
     '''
     Given a set M of pfvs that form a join semilattice, M is a *distributive* iff
     for all a, b, x

@@ -35,9 +35,9 @@ def test_lte_pair():
 
 
 lc_a = np.array([[-1, 0,+1, 0],
-                 [0 , 0,+1, 0],
+                 [ 0, 0,+1, 0],
                  [-1, 0, 0, 0],
-                 [0 , 0, 0, 0]],dtype=INT8)
+                 [ 0, 0, 0, 0]],dtype=INT8)
 
 uc_a = np.array([[-1, 0,+1, 0],
                  [-1,+1,+1, 0],
@@ -342,9 +342,9 @@ def test_all_pfvs_together_do_NOT_form_a_join_semilattice():
     assert not fv.is_join_semilattice(all3Vecs)
 
 def test_all_pfvs_together_do_NOT_form_a_distributive_meet_semilattice():
-    is_dist = fv.meet_semilattice_is_distributive(all3Vecs)
+    is_dist = fv.is_meet_semilattice_distributive(all3Vecs)
     # if not is_dist:
-    #     cxsWrapped = fv.meet_semilattice_is_distributive(all3Vecs, True)
+    #     cxsWrapped = fv.is_meet_semilattice_distributive(all3Vecs, True)
     #     cxs        = lmap(lambda abx: lmap(lambda v: v.unwrap(), list(abx)), 
     #                             list(cxsWrapped))
     #     cxsPretty = lmap(lambda abx: f"{abx[2]} ≤ {abx[0]} ∧ {abx[1]} but a',b' dne",
@@ -403,7 +403,7 @@ def test_NOT_every_uc_defines_a_distributive_meet_semilattice():
     does_not_define_a_dmsl = []
     for i,v in enumerate(all3Vecs):
         uc = fv.upper_closure(v)
-        if not fv.meet_semilattice_is_distributive(uc):#, f"{i}:{v}\n{uc}"
+        if not fv.is_meet_semilattice_distributive(uc):#, f"{i}:{v}\n{uc}"
             does_not_define_a_dmsl.append(v)
     assert len(does_not_define_a_dmsl) > 0
 
@@ -423,19 +423,31 @@ def test_intersection_of_every_pair_of_UCs_is_the_UC_of_the_join():
 # properties of PRIORITY UNION
 
 def test_priority_union_does_NOT_left_distribute_over_meet():
-    left_dist_prunion_meet_cxs = fv.left_distribution_bin_bin(fv.priority_union, fv.meet_specification, all3Vecs, returnCounterexamples=True)
+    left_dist_prunion_meet_cxs = fv.left_distribution_bin_bin(fv.priority_union, 
+                                                              fv.meet_specification, 
+                                                              all3Vecs, 
+                                                              returnCounterexamples=True)
     assert len(left_dist_prunion_meet_cxs) > 0
 
 def test_priority_union_right_distributes_over_meet():
-    right_dist_prunion_meet_cxs = fv.right_distribution_bin_bin(fv.priority_union, fv.meet_specification, all3Vecs, returnCounterexamples=True)
+    right_dist_prunion_meet_cxs = fv.right_distribution_bin_bin(fv.priority_union, 
+                                                                fv.meet_specification, 
+                                                                all3Vecs, 
+                                                                returnCounterexamples=True)
     assert len(right_dist_prunion_meet_cxs) == 0, f"{right_dist_prunion_meet_cxs}"
 
 def test_priority_union_does_NOT_left_distribute_over_join():
-    left_dist_prunion_join_cxs = fv.left_distribution_bin_bin(fv.priority_union, fv.join_specification, all3Vecs, returnCounterexamples=True)
+    left_dist_prunion_join_cxs = fv.left_distribution_bin_bin(fv.priority_union, 
+                                                              fv.join_specification, 
+                                                              all3Vecs, 
+                                                              returnCounterexamples=True)
     assert len(left_dist_prunion_join_cxs) > 0
 
 def test_priority_union_does_NOT_right_distribute_over_join():
-    right_dist_prunion_join_cxs = fv.right_distribution_bin_bin(fv.priority_union, fv.join_specification, all3Vecs, returnCounterexamples=True)
+    right_dist_prunion_join_cxs = fv.right_distribution_bin_bin(fv.priority_union, 
+                                                                fv.join_specification, 
+                                                                all3Vecs, 
+                                                                returnCounterexamples=True)
     assert len(right_dist_prunion_join_cxs) > 0
 
 def test_priority_union_right_preserves_partial_order():
@@ -443,7 +455,9 @@ def test_priority_union_right_preserves_partial_order():
     for xWrapped in all3VecsSet:
         x = xWrapped.unwrap()
         leftArg = lambda left: fv.priority_union(left, x)
-        current_prunion_pres_po_cxs_right = fv.preserves_partial_order(all3Vecs, leftArg, returnCounterexamples=True)
+        current_prunion_pres_po_cxs_right = fv.preserves_partial_order(all3Vecs, 
+                                                                       leftArg, 
+                                                                       returnCounterexamples=True)
         prunion_pres_po_cxs_rights.append(current_prunion_pres_po_cxs_right)
     prunion_pres_po_cxs_right = grand_union(prunion_pres_po_cxs_rights)
     assert len(prunion_pres_po_cxs_right) == 0, f"{prunion_pres_po_cxs_right}"
@@ -453,7 +467,9 @@ def test_priority_union_left_does_NOT_preserve_partial_order():
     for xWrapped in all3VecsSet:
         x = xWrapped.unwrap()
         rightArg = lambda right: fv.priority_union(x, right)
-        current_prunion_pres_po_cxs_left = fv.preserves_partial_order(all3Vecs, rightArg, returnCounterexamples=True)
+        current_prunion_pres_po_cxs_left = fv.preserves_partial_order(all3Vecs, 
+                                                                      rightArg, 
+                                                                      returnCounterexamples=True)
         prunion_pres_po_cxs_lefts.append(current_prunion_pres_po_cxs_left)
     prunion_pres_po_cxs_left = grand_union(prunion_pres_po_cxs_lefts)
     assert len(prunion_pres_po_cxs_left) > 0
@@ -464,7 +480,9 @@ def test_priority_union_right_preserves_meets():
     for xWrapped in all3VecsSet:
         x = xWrapped.unwrap()
         leftArg = lambda left: fv.priority_union(left, x)
-        current_prunion_pres_meet_cxs_right = fv.preserves_meet(all3Vecs, leftArg, returnCounterexamples=True)
+        current_prunion_pres_meet_cxs_right = fv.preserves_meet(all3Vecs, 
+                                                                leftArg, 
+                                                                returnCounterexamples=True)
         prunion_pres_meet_cxs_rights.append(current_prunion_pres_meet_cxs_right)
     prunion_pres_meet_cxs_right = grand_union(prunion_pres_meet_cxs_rights)
     assert len(prunion_pres_meet_cxs_right) == 0, f"{prunion_pres_meet_cxs_right}"
@@ -475,7 +493,9 @@ def test_priority_union_left_does_NOT_preserve_meets():
     for xWrapped in all3VecsSet:
         x = xWrapped.unwrap()
         rightArg = lambda right: fv.priority_union(x, right)
-        current_prunion_pres_meet_cxs_left = fv.preserves_meet(all3Vecs, rightArg, returnCounterexamples=True)
+        current_prunion_pres_meet_cxs_left = fv.preserves_meet(all3Vecs, 
+                                                               rightArg, 
+                                                               returnCounterexamples=True)
         prunion_pres_meet_cxs_lefts.append(current_prunion_pres_meet_cxs_left)
     prunion_pres_meet_cxs_left = grand_union(prunion_pres_meet_cxs_lefts)
     assert len(prunion_pres_meet_cxs_left) > 0#, f"{prunion_pres_meet_cxs_left}"
@@ -486,7 +506,9 @@ def test_priority_union_right_does_NOT_preserve_joins():
     for xWrapped in all3VecsSet:
         x = xWrapped.unwrap()
         leftArg = lambda left: fv.priority_union(left, x)
-        current_prunion_pres_join_cxs_right = fv.preserves_join(all3Vecs, leftArg, returnCounterexamples=True)
+        current_prunion_pres_join_cxs_right = fv.preserves_join(all3Vecs, 
+                                                                leftArg, 
+                                                                returnCounterexamples=True)
         prunion_pres_join_cxs_rights.append(current_prunion_pres_join_cxs_right)
     prunion_pres_join_cxs_right = grand_union(prunion_pres_join_cxs_rights)
     assert len(prunion_pres_join_cxs_right) > 0#, f"{prunion_pres_join_cxs_right}"
@@ -497,7 +519,9 @@ def test_priority_union_left_does_NOT_preserve_joins():
     for xWrapped in all3VecsSet:
         x = xWrapped.unwrap()
         rightArg = lambda right: fv.priority_union(x, right)
-        current_prunion_pres_join_cxs_left = fv.preserves_join(all3Vecs, rightArg, returnCounterexamples=True)
+        current_prunion_pres_join_cxs_left = fv.preserves_join(all3Vecs, 
+                                                               rightArg, 
+                                                               returnCounterexamples=True)
         prunion_pres_join_cxs_lefts.append(current_prunion_pres_join_cxs_left)
     prunion_pres_join_cxs_left = grand_union(prunion_pres_join_cxs_lefts)
     assert len(prunion_pres_join_cxs_left) > 0#, f"{prunion_pres_join_cxs_left}"
@@ -509,7 +533,9 @@ def test_priority_union_right_is_a_meet_SL_HM_over_UCs():
         x   = xWrapped.unwrap()
         xUC = fv.upper_closure(x)
         leftArg = lambda left: fv.priority_union(left, x)
-        current_prunion_mslhm_UCs_cxs_right = fv.is_meet_semilattice_homomorphism(xUC, leftArg, returnCounterexamples=True)
+        current_prunion_mslhm_UCs_cxs_right = fv.is_meet_semilattice_homomorphism(xUC, 
+                                                                                  leftArg, 
+                                                                                  returnCounterexamples=True)
         prunion_mslhm_UCs_cxs_rights.append(current_prunion_mslhm_UCs_cxs_right)
     prunion_mslhm_UCs_cxs_right = grand_union(prunion_mslhm_UCs_cxs_rights)
     assert len(prunion_mslhm_UCs_cxs_right) == 0, f"{prunion_mslhm_UCs_cxs_right}"
@@ -520,7 +546,9 @@ def test_priority_union_left_is_a_meet_SL_HM_over_UCs():
         x   = xWrapped.unwrap()
         xUC = fv.upper_closure(x)
         rightArg = lambda right: fv.priority_union(x, right)
-        current_prunion_mslhm_UCs_cxs_left = fv.is_meet_semilattice_homomorphism(xUC, rightArg, returnCounterexamples=True)
+        current_prunion_mslhm_UCs_cxs_left = fv.is_meet_semilattice_homomorphism(xUC, 
+                                                                                 rightArg, 
+                                                                                 returnCounterexamples=True)
         prunion_mslhm_UCs_cxs_lefts.append(current_prunion_mslhm_UCs_cxs_left)
     prunion_mslhm_UCs_cxs_left = grand_union(prunion_mslhm_UCs_cxs_lefts)
     assert len(prunion_mslhm_UCs_cxs_left) == 0, f"{prunion_mslhm_UCs_cxs_left}"
@@ -531,7 +559,9 @@ def test_priority_union_right_is_a_lattice_HM_over_LCs():
         x   = xWrapped.unwrap()
         xLC = fv.lower_closure(x)
         leftArg = lambda left: fv.priority_union(left, x)
-        current_prunion_lhm_LCs_cxs_right = fv.is_lattice_homomorphism(xLC, leftArg, returnCounterexamples=True)
+        current_prunion_lhm_LCs_cxs_right = fv.is_lattice_homomorphism(xLC, 
+                                                                       leftArg, 
+                                                                       returnCounterexamples=True)
         prunion_lhm_LCs_cxs_rights.append(current_prunion_lhm_LCs_cxs_right)
     prunion_lhm_LCs_cxs_right = grand_union(prunion_lhm_LCs_cxs_rights)
     assert len(prunion_lhm_LCs_cxs_right) == 0, f"{prunion_lhm_LCs_cxs_right}"
@@ -542,7 +572,9 @@ def test_priority_union_left_is_a_lattice_HM_over_LCs():
         x   = xWrapped.unwrap()
         xLC = fv.lower_closure(x)
         rightArg = lambda right: fv.priority_union(x, right)
-        current_prunion_lhm_LCs_cxs_left = fv.is_lattice_homomorphism(xLC, rightArg, returnCounterexamples=True)
+        current_prunion_lhm_LCs_cxs_left = fv.is_lattice_homomorphism(xLC, 
+                                                                      rightArg, 
+                                                                      returnCounterexamples=True)
         prunion_lhm_LCs_cxs_lefts.append(current_prunion_lhm_LCs_cxs_left)
     prunion_lhm_LCs_cxs_left = grand_union(prunion_lhm_LCs_cxs_lefts)
     assert len(prunion_lhm_LCs_cxs_left) == 0, f"{prunion_lhm_LCs_cxs_left}"
