@@ -516,16 +516,16 @@ def test_priority_union_left_is_a_lattice_HM_over_LCs():
         current_prunion_lhm_LCs_cxs_left = fv.is_lattice_homomorphism(xLC, rightArg, returnCounterexamples=True)
         prunion_lhm_LCs_cxs_lefts.append(current_prunion_lhm_LCs_cxs_left)
     prunion_lhm_LCs_cxs_left = grand_union(prunion_lhm_LCs_cxs_lefts)
-    assert len(prunion_lhm_LCs_cxs_left) == 0
+    assert len(prunion_lhm_LCs_cxs_left) == 0, f"{prunion_lhm_LCs_cxs_left}"
 
-# properties of LEFT INVERSE
+# properties of LEFT INVERSE PRIORITY UNION
 
 def test_not_every_left_inverse_is_a_lower_closure():
     counterexamples = set()
     def left_inverse_is_a_lower_closure(i,a,b,c):
         possibleBs    = fv.left_inv_priority_union(a,c)
         possibleBsSet = fv.stack_to_set(possibleBs)
-        return possibleBsSet in allLC3sCompressed
+        return possibleBs is None or possibleBsSet in allLC3sCompressed
         # , f"{i}:{a},{b},{c}\n{possibleBsSet}"
     for i,(a,b,c) in enumerate(all3VecIO):
         if not left_inverse_is_a_lower_closure(i,a,b,c):
