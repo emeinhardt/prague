@@ -828,7 +828,7 @@ def diff(c,a):
     return b
 
 
-def left_inv_priority_union(a,c,returnAsIntervalBounds=False):
+def left_inv_priority_union(a, c, returnAsIntervalBounds=False):
     '''
     Let + denote right priority union, where for some unknown pfv b
       a + b = c
@@ -1408,50 +1408,64 @@ def join_specification_stack(M):
     return j
 
 
-def join_specification_possible(u,v):
+def join_specification_possible(u=None, v=None, M=None):
     '''
     Given two partial feature vectors u,v, returns whether their join in
     the specification semilattice exists.
+
+    Alternately, given a stack of vectors M, returns whether a join of the stack
+    in the specification semilattice exists.
     '''
-    specified_in_u    = np.abs(u) == 1
-    specified_in_v    = np.abs(v) == 1
-    specified_in_both = specified_in_u & specified_in_v
-    
-    same           = u == v
-    different      = u != v
-    
-    incompatible   = specified_in_both & different
-    return not np.any(incompatible)
+    if u is not None and v is not None:
+        specified_in_u    = np.abs(u) == 1
+        specified_in_v    = np.abs(v) == 1
+        specified_in_both = specified_in_u & specified_in_v
+        
+        same           = u == v
+        different      = u != v
+        
+        incompatible   = specified_in_both & different
+        return not np.any(incompatible)
+    elif M is not None:
+        return join_specification_possible_stack(M)
+    else:
+        raise Exception('Provide exactly two vectors u,v or else a stack M.')
 
 
-def join_specification(u, v):
+def join_specification(u=None, v=None, M=None):
     '''Given two partial feature vectors u,v, returns the unique single partial
     feature vector that is the least upper bound of u and v in the
     specification semilattice, if it exists. This will be a vector with every 
     specified value that is specified in u and with every specified value that 
     is specified in v, and with no other specified values.
     
+    Alternately: given a stack of partial feature vectors M (one vector per
+    row), returns the least upper bound of the stack in the specification
+    semilattice if it exists, else None.
+
     If no such join exists, returns None.
     '''
-    # Alternately: given a stack of partial feature vectors M (one vector per
-    # row), returns the least upper bound of the stack in the specification
-    # semilattice if it exists, else None.
-    specified_in_u    = np.abs(u) == 1
-    specified_in_v    = np.abs(v) == 1
-    specified_in_both = specified_in_u & specified_in_v
-    
-    same           = u == v
-    different      = u != v
-    
-    incompatible   = specified_in_both & different
-    if np.any(incompatible):
-        return None
-    
-    specified_just_in_u = specified_in_u & ~specified_in_both
-    specified_just_in_v = specified_in_v & ~specified_in_both
-    
-    join = (specified_in_both * u) + (specified_just_in_u * u) + (specified_just_in_v * v)
-    return join
+    if u is not None and v is not None:
+        specified_in_u    = np.abs(u) == 1
+        specified_in_v    = np.abs(v) == 1
+        specified_in_both = specified_in_u & specified_in_v
+        
+        same           = u == v
+        different      = u != v
+        
+        incompatible   = specified_in_both & different
+        if np.any(incompatible):
+            return None
+        
+        specified_just_in_u = specified_in_u & ~specified_in_both
+        specified_just_in_v = specified_in_v & ~specified_in_both
+        
+        join = (specified_in_both * u) + (specified_just_in_u * u) + (specified_just_in_v * v)
+        return join
+    elif M is not None:
+        return join_specification_stack(M)
+    else:
+        raise Exception('Provide exactly two vectors u,v or else a stack M.')
 
 
 def is_meet_semilattice(M):
