@@ -225,6 +225,35 @@ def test_join_specification_stack_implementations_eq():
 
 all3VecIO = [(a,b,fv.priority_union(a,b)) for a in all3Vecs for b in all3Vecs]
 
+#########################################
+# priority union implementation testing #
+#########################################
+
+
+def test_priority_union_stack_left_as_expected():
+    counterexamples = set()
+    for xWrapped in all3VecsSet:
+        x = xWrapped.unwrap()
+        stackLeftResult = fv.priority_union(all3Vecs, x)
+        nonVectorResult = np.array([fv.priority_union(v, x) for v in all3Vecs], dtype=INT8)
+        stackLeftResultSet = fv.stack_to_set(stackLeftResult)
+        nonVectorResultSet = fv.stack_to_set(nonVectorResult)
+        if stackLeftResultSet != nonVectorResultSet:
+            counterexamples.add((xWrapped))
+    assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
+
+def test_priority_union_stack_right_as_expected():
+    counterexamples = set()
+    for xWrapped in all3VecsSet:
+        x = xWrapped.unwrap()
+        stackRightResult = fv.priority_union(x, all3Vecs)
+        nonVectorResult = np.array([fv.priority_union(x, v) for v in all3Vecs], dtype=INT8)
+        stackRightResultSet = fv.stack_to_set(stackRightResult)
+        nonVectorResultSet = fv.stack_to_set(nonVectorResult)
+        if stackRightResultSet != nonVectorResultSet:
+            counterexamples.add((xWrapped))
+    assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
+
 
 ###############################################################
 # left/right inverse of priority union implementation testing #
