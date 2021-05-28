@@ -827,7 +827,7 @@ def diff(c,a):
     return b
 
 
-def left_inv_priority_union(a,c):
+def left_inv_priority_union(a,c,returnAsIntervalBounds=False):
     '''
     Let + denote right priority union, where for some unknown pfv b
       a + b = c
@@ -847,14 +847,27 @@ def left_inv_priority_union(a,c):
       a_i = 0             -> b_i = c_i
       a_i ≠ 0 ∧ a_i ≠ c_i -> b_i = c_i
       a_i ≠ 0 ∧ a_i = c_i -> b_i = c_i ∨ 0
+
+    By default this returns the stack of all solutions (if it exists). This set 
+    of solutions will always form a bounded lattice - an interval of the 
+    specification semilattice, in fact. If returnAsIntervalBounds=True, then 
+    instead of returning the (potentially enormous) stack of solutions, the 
+    bounds of the solution interval are returned as a tuple: 
+        (max of solution interval, min of solution interval)
     '''
     whereClteA = (c == 0) & (a != 0)
     if np.any(whereClteA):
         return None
     glb        = meet_specification(a,c)
     k          = diff(c,glb)
+    lub_interval = priority_union(glb,k)
+    glb_interval = k
+    if returnAsIntervalBounds:
+        return (lub_interval, glb_interval)
     lcGlb      = lower_closure(glb)
     lcGlb_proj = priority_union(lcGlb,k)
+    assert np.array_equal(max_of(lcGlb_proj), lub_interval), f"{max_of(lcGlb_proj)} vs. {lub_interval}"
+    assert np.array_equal(min_of(lcGlb_proj), glb_interval), f"{min_of(lcGlb_proj)} vs. {glb_interval}"
     return lcGlb_proj
 
 
@@ -2518,6 +2531,22 @@ def interval(u,v):
         cap     = vLC[capMask.nonzero()]
     return cap
 
+
+def interval_intersection(intervalABounds, intervalBBounds):
+    '''
+    Given two specification semilattice intervals, each defined by a tuple 
+    (max, min) describing the maximum and minimum of each interval, this 
+    returns the interval (if it exists) that is the intersection of the two 
+    input intervals. (The returned interval will be specified in the same way
+    the input intervals are.)
+    '''
+    maxA, minA = intervalABounds
+    maxB, minB = intervalBBounds
+    maxCap = meet_specification(maxA, maxB)
+    minCap = join_specification(minA, minB)
+    if maxCap is None or minCap is None or not lte_specification(minCap, maxCap):
+        return None
+    return (maxCap, minCap)
 
 
 ############################################################
