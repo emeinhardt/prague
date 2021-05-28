@@ -483,7 +483,7 @@ def test_priority_union_right_is_a_meet_SL_HM_over_UCs():
         current_prunion_mslhm_UCs_cxs_right = fv.is_meet_semilattice_homomorphism(xUC, leftArg, returnCounterexamples=True)
         prunion_mslhm_UCs_cxs_rights.append(current_prunion_mslhm_UCs_cxs_right)
     prunion_mslhm_UCs_cxs_right = grand_union(prunion_mslhm_UCs_cxs_rights)
-    assert len(prunion_mslhm_UCs_cxs_right) == 0
+    assert len(prunion_mslhm_UCs_cxs_right) == 0, f"{prunion_mslhm_UCs_cxs_right}"
 
 def test_priority_union_left_is_a_meet_SL_HM_over_UCs():
     prunion_mslhm_UCs_cxs_lefts = []
@@ -494,7 +494,7 @@ def test_priority_union_left_is_a_meet_SL_HM_over_UCs():
         current_prunion_mslhm_UCs_cxs_left = fv.is_meet_semilattice_homomorphism(xUC, rightArg, returnCounterexamples=True)
         prunion_mslhm_UCs_cxs_lefts.append(current_prunion_mslhm_UCs_cxs_left)
     prunion_mslhm_UCs_cxs_left = grand_union(prunion_mslhm_UCs_cxs_lefts)
-    assert len(prunion_mslhm_UCs_cxs_left) == 0
+    assert len(prunion_mslhm_UCs_cxs_left) == 0, f"{prunion_mslhm_UCs_cxs_left}"
 
 def test_priority_union_right_is_a_lattice_HM_over_LCs():
     prunion_lhm_LCs_cxs_rights = []
@@ -505,7 +505,7 @@ def test_priority_union_right_is_a_lattice_HM_over_LCs():
         current_prunion_lhm_LCs_cxs_right = fv.is_lattice_homomorphism(xLC, leftArg, returnCounterexamples=True)
         prunion_lhm_LCs_cxs_rights.append(current_prunion_lhm_LCs_cxs_right)
     prunion_lhm_LCs_cxs_right = grand_union(prunion_lhm_LCs_cxs_rights)
-    assert len(prunion_lhm_LCs_cxs_right) == 0
+    assert len(prunion_lhm_LCs_cxs_right) == 0, f"{prunion_lhm_LCs_cxs_right}"
 
 def test_priority_union_left_is_a_lattice_HM_over_LCs():
     prunion_lhm_LCs_cxs_lefts = []
