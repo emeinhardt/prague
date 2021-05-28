@@ -29,12 +29,9 @@ Development-oriented todo list.
  - Refactor the following functions for stack-compatibility if possible:
    - `left_inv_priority_union`
    - `right_inv_priority_union`
-   - `spe_update` (might already be OK?)
    - `pseudolinear_inverse_possible`
    - `pseudolinear_inverse`
    - `pseudolinear_decomposition`
-   - `join_specification_possible`
-   - `join_specification`
    - `normalize`
  - Add functionality for solving the function analogues of the three problems described in the `readme`.
 
