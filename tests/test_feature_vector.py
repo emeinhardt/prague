@@ -583,6 +583,7 @@ def test_every_defined_right_inverse_yields_a_bounded_meet_semilattice():
     assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
 
 
+# properties of INVERVALS and LEFT INVERSE PRIORITY UNION
 
 all3VecPairsLeftLTERightSet = {(a,b) for a,b in all3VecPairsSet 
                                 if fv.lte_specification(a.unwrap(),b.unwrap())}
