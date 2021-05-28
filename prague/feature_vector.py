@@ -9,6 +9,7 @@ import scipy.spatial.distance
 import random
 
 from funcy import cat, lmap
+from functools import reduce
 
 import itertools
 
@@ -993,7 +994,7 @@ def make_rule(target, change):
     '''
     assert target.shape[0] == change.shape[0], f"Shape mismatch: {target.shape} vs. {change.shape}"
     def phi(v):
-        if lte(target, v):
+        if lte_specification(target, v):
             return priority_union(v, change)
         else:
             return v
@@ -1371,9 +1372,6 @@ def is_closed_under_join(M):
 
 
 def join_naive(v,u):
-    '''
-    FIXME document and optimize.
-    '''
     def j(v_i,u_i):
         if v_i == 0:
             return u_i
@@ -2546,7 +2544,7 @@ def interval_intersection(intervalABounds, intervalBBounds):
     minCap = join_specification(minA, minB)
     if maxCap is None or minCap is None or not lte_specification(minCap, maxCap):
         return None
-    return (maxCap, minCap)
+    return (minCap, maxCap)
 
 
 ############################################################
