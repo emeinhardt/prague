@@ -599,7 +599,7 @@ def test_every_interval_is_a_bounded_lattice():
     assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
 
 
-def test_the_intersection_of_every_pair_of_intervals_is_empty_or_a_BL():
+def test_the_intersection_of_every_pair_of_intervals_is_empty_or_an_interval():
     counterexamples = set()
     for i,intervalLeftWrapped in enumerate(all3VecIntervals):
         # intervalLeft = fv.hashableArrays_to_stack(intervalLeftWrapped)
@@ -607,12 +607,14 @@ def test_the_intersection_of_every_pair_of_intervals_is_empty_or_a_BL():
             # intervalRight = fv.hashableArrays_to_stack(intervalRightWrapped)
             capSet   = intervalLeftWrapped.intersection(intervalRightWrapped)
             capStack = fv.hashableArrays_to_stack(capSet)
-            if len(capSet) > 0 and not fv.is_bounded_lattice(capStack):
-                counterexamples.add(((i,intervalLeftWrapped),(j,intervalRightWrapped)))
+            if len(capSet) > 0:
+                # if not fv.is_bounded_lattice(capStack):
+                if not capSet in all3VecIntervals:
+                    counterexamples.add(((i,intervalLeftWrapped),(j,intervalRightWrapped)))
     assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
 
 
-def test_cap_of_every_interval_pair_is_empty_or_a_BL_with_natural_bounds():
+def test_cap_of_every_interval_pair_is_empty_or_an_interval_with_natural_bounds():
     counterexamples = set()
     for i,intervalLeftWrapped in enumerate(all3VecIntervals):
         intervalLeft     = fv.hashableArrays_to_stack(intervalLeftWrapped)
@@ -624,13 +626,15 @@ def test_cap_of_every_interval_pair_is_empty_or_a_BL_with_natural_bounds():
             capSet   = intervalLeftWrapped.intersection(intervalRightWrapped)
             capStack = fv.hashableArrays_to_stack(capSet)
             
+            est_cap_max = fv.meet_specification(maxLeft, maxRight)
+            est_cap_min = fv.join_specification(minLeft, minRight)
             if len(capSet) > 0:
-                est_cap_max = fv.meet_specification(maxLeft, maxRight)
-                est_cap_min = fv.join_specification(minLeft, minRight)
                 est_cap = fv.interval(est_cap_min, est_cap_max)
                 est_capSet = fv.stack_to_set(est_cap)
                 if not est_capSet == capSet:
                     counterexamples.add(((i,intervalLeftWrapped),(j,intervalRightWrapped), (capSet, est_capSet)))
+            else:
+                assert est_cap_max is None or est_cap_min is None or not fv.lte_specification(est_cap_min, est_cap_max), f"{est_cap_max}, {est_cap_min}"
     assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
 
 def test_every_defined_left_inverse_yields_a_bounded_lattice_that_is_an_interval():
