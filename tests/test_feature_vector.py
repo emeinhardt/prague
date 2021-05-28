@@ -532,3 +532,84 @@ def test_not_every_left_inverse_is_a_lower_closure():
             counterexamples.add((i,(fv.HashableArray(a),fv.HashableArray(b),fv.HashableArray(c))))
     assert len(counterexamples) > 0, f"no counterexamples!"
 
+
+def test_every_defined_left_inverse_yields_a_bounded_lattice():
+    counterexamples = set()
+    for i,(a,b,c) in enumerate(all3VecIO):
+        possibleBs = fv.left_inv_priority_union(a,c)
+        if not fv.is_bounded_lattice(possibleBs):
+            counterexamples.add((i,(fv.HashableArray(a),fv.HashableArray(b),fv.HashableArray(c))))
+    assert len(counterexamples) == 0, f"{counterexamples}"
+
+
+
+# properties of RIGHT INVERSE PRIORITY UNION
+
+def test_every_defined_right_inverse_yields_a_bounded_meet_semilattice():
+    counterexamples = set()
+    for i,(a,b,c) in enumerate(all3VecIO):
+        possibleAs = fv.right_inv_priority_union(c,b)
+        if not fv.is_bounded_meet_semilattice(possibleAs):
+            counterexamples.add((i,(fv.HashableArray(a),fv.HashableArray(b),fv.HashableArray(c))))
+    assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
+
+
+
+all3VecPairsLeftLTERightSet = {(a,b) for a,b in all3VecPairsSet 
+                                if fv.lte_specification(a.unwrap(),b.unwrap())}
+all3VecIntervals = {frozenset(fv.stack_to_set(fv.interval(a.unwrap(),b.unwrap()))) 
+                    for a,b in all3VecPairsLeftLTERightSet}
+
+
+def test_every_interval_is_a_bounded_lattice():
+    counterexamples = set()
+    for i,intervalWrapped in enumerate(all3VecIntervals):
+        interval = fv.hashableArrays_to_stack(intervalWrapped)
+        if not fv.is_bounded_lattice(interval):
+            counterexamples.add(intervalWrapped)
+    assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
+
+
+def test_the_intersection_of_every_pair_of_intervals_is_empty_or_a_BL():
+    counterexamples = set()
+    for i,intervalLeftWrapped in enumerate(all3VecIntervals):
+        # intervalLeft = fv.hashableArrays_to_stack(intervalLeftWrapped)
+        for j,intervalRightWrapped in enumerate(all3VecIntervals):
+            # intervalRight = fv.hashableArrays_to_stack(intervalRightWrapped)
+            capSet   = intervalLeftWrapped.intersection(intervalRightWrapped)
+            capStack = fv.hashableArrays_to_stack(capSet)
+            if len(capSet) > 0 and not fv.is_bounded_lattice(capStack):
+                counterexamples.add(((i,intervalLeftWrapped),(j,intervalRightWrapped)))
+    assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
+
+
+def test_cap_of_every_interval_pair_is_empty_or_a_BL_with_natural_bounds():
+    counterexamples = set()
+    for i,intervalLeftWrapped in enumerate(all3VecIntervals):
+        intervalLeft     = fv.hashableArrays_to_stack(intervalLeftWrapped)
+        maxLeft, minLeft = fv.max_of(intervalLeft), fv.min_of(intervalLeft)
+        for j,intervalRightWrapped in enumerate(all3VecIntervals):
+            intervalRight    = fv.hashableArrays_to_stack(intervalRightWrapped)
+            maxRight, minRight = fv.max_of(intervalRight), fv.min_of(intervalRight)
+            
+            capSet   = intervalLeftWrapped.intersection(intervalRightWrapped)
+            capStack = fv.hashableArrays_to_stack(capSet)
+            
+            if len(capSet) > 0:
+                est_cap_max = fv.meet_specification(maxLeft, maxRight)
+                est_cap_min = fv.join_specification(minLeft, minRight)
+                est_cap = fv.interval(est_cap_min, est_cap_max)
+                est_capSet = fv.stack_to_set(est_cap)
+                if not est_capSet == capSet:
+                    counterexamples.add(((i,intervalLeftWrapped),(j,intervalRightWrapped), (capSet, est_capSet)))
+    assert len(counterexamples) == 0, f"Counterexamples:\n{counterexamples}"
+
+def test_every_defined_left_inverse_yields_a_bounded_lattice_that_is_an_interval():
+    counterexamples = set()
+    for i,(a,b,c) in enumerate(all3VecIO):
+        possibleBs = fv.left_inv_priority_union(a,c)
+        possibleBSet = fv.stack_to_set(possibleBs)
+        if not possibleBSet in all3VecIntervals:
+            counterexamples.add((i,(fv.HashableArray(a),fv.HashableArray(b),fv.HashableArray(c))))
+    assert len(counterexamples) == 0, f"{counterexamples}"
+
