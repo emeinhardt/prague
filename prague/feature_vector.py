@@ -2337,6 +2337,188 @@ def is_lattice_homomorphism(M, op, returnCounterexamples=False):
     return len(cxs) == 0
 
 
+def is_total_over(M, op, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs and a (unary) function to/from pfvs, this checks 
+    whether the function is defined on every element of the stack.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the function is not total.
+    '''
+    Ms = stack_to_set(M)
+    counterexamples = set()
+    for vWrapped in Ms:
+        v = vWrapped.unwrap()
+        if op(v) is None:
+            counterexamples.add(vWrapped)
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+def is_endomorphism(M, op, ignoreUndefined=False, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs and a (unary) function to/from pfvs, this checks 
+    whether the image of every pfv in the input stack is some (not necessarily
+    distinct) pfv in the input stack.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the function is not an endomorphism.
+
+    If ignoreUndefined=False, then any function that is partial over the input
+    stack will NOT be considered an endomorphism. Otherwise, elements of the 
+    input stack where the function is undefined will be ignored when considering
+    whether the function is an endomorphism.
+    '''
+    counterexamples = set()
+    if not ignoreUndefined:
+        non_total_counterexamples = is_total_over(M, op, returnCounterexamples=True)
+        counterexamples.union(non_total_counterexamples)
+
+    Ms = stack_to_set(M)
+    for vWrapped in Ms:
+        v = vWrapped.unwrap()
+        v_out = op(v)
+        if v_out is not None:
+            v_outWrapped = HashableArray(v_out)
+            if v_outWrapped not in Ms:
+                counterexamples.add((vWrapped, v_outWrapped))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+def fibers(M, op):
+    '''
+    Given a stack of pfvs and a unary function to/from pfvs, this calculates
+    the set of fibers of the function with respect to the input stack:
+      - given f: X -> Y,
+        fibers(f)(y) = {x | f(x) = y}
+    where fibers is a dictionary with keys (either HashableArrays or Nones) and 
+    values that are sets of HashableArrays.
+    '''
+    Ms = stack_to_set(M)
+    fibers = dict()
+    for vWrapped in Ms:
+        v = vWrapped.unwrap()
+        v_out = op(v)
+        v_outWrapped = HashableArray(v_out) if v_out is not None else None
+        if v_outWrapped in fibers:
+            fibers[v_outWrapped].add(vWrapped)
+        else:
+            fibers[v_outWrapped] = {vWrapped}
+    return fibers
+
+
+def is_bijection(M, op, ignoreUndefined=False, returnCounterexamples=False):
+    '''
+    Given a stack of pfvs and a (unary) function to/from pfvs, this checks 
+    whether the function is a bijection.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the function is not a bijection.
+
+    If ignoreUndefined=False, then any function that is partial over the input
+    stack will NOT be considered a bijection. Otherwise, elements of the 
+    input stack where the function is undefined will be ignored when considering
+    whether the function is a bijection.
+    '''
+    counterexamples = set()
+    if not ignoreUndefined:
+        non_total_counterexamples = is_total_over(M, op, returnCounterexamples=True)
+        counterexamples.union(non_total_counterexamples)
+
+    Ms = stack_to_set(M)
+    myFibers = fibers(M, op)
+    if ignoreUndefined and None in myFibers:
+        del myFibers[None]
+    for v_outWrapped in myFibers:
+        # v_out = v_outWrapped.unwrap()
+        if len(myFibers[v_outWrapped]) > 0:
+            counterexamples.add((v_outWrapped, frozenset(myFibers[v_outWrapped])))
+    if returnCounterexamples:
+        return counterexamples
+    return len(counterexamples) == 0
+
+
+def image_always_satisfies(M, op, pred, returnCounterexamples=False):
+    '''
+    Given 
+     - a stack of pfvs
+     - a (unary) function to/from pfvs
+     - a predicate on stacks of pfvs
+    this checks whether the image of the input stack under the function 
+    satisfies the predicate.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the image of the input stack under the 
+    function does not satisfy the predicate.
+    '''
+    Ms          = stack_to_set(M)
+    Ms_out      = {HashableArray(v_out) 
+                   for v_out in [op(v.unwrap()) for v in Ms] 
+                   if v_out is not None}
+    M_out_stack = hashableArrays_to_stack(Ms_out)
+    cxs         = pred(M_out_stack, returnCounterexamples=True)
+    if returnCounterexamples:
+        return cxs
+    return len(cxs) == 0
+
+
+def image_always_satisfies_pred_when_domain_does(M, op, pred, returnCounterexamples=False):
+    '''
+    Given 
+     - a stack of pfvs
+     - a (unary) function to/from pfvs
+     - a predicate on stacks of pfvs
+    this checks whether the image of the input stack under the function 
+    satisfies the predicate whenever the input stack itself does.
+
+    By default, this returns a boolean. If returnCounterexamples=True, then this
+    returns data (if any) concerning why the image of the input stack under the 
+    function does not satisfy the predicate.
+    '''
+    domain_satisfies_pred = pred(M, returnCounterexamples=False)
+    if not domain_satisfies_pred:
+        if returnCounterexamples:
+            return set()
+        return True
+    
+    Ms          = stack_to_set(M)
+    Ms_out      = {HashableArray(v_out) 
+                   for v_out in [op(v.unwrap()) for v in Ms] 
+                   if v_out is not None}
+    M_out_stack = hashableArrays_to_stack(Ms_out)
+    cxs         = pred(M_out_stack, returnCounterexamples=True)
+    if returnCounterexamples:
+        return cxs
+    return len(cxs) == 0
+
+
+def interval(u,v):
+    '''
+    Given two pfvs u,v such that u ≤ v, this returns the stack of pfvs 
+      {x | u ≤ x ≤ v}
+    Note that this stack is necessarily a bounded lattice.
+    '''
+    if not lte_specification(u,v):
+        return None
+    m             = u.shape[0]
+    maxSpecDegree = m
+    uSpecDegree, vSpecDegree = specification_degree(u), specification_degree(v)
+    uDistFromBottom = uSpecDegree
+    vDistFromTop    = maxSpecDegree - vSpecDegree
+    if uDistFromBottom >= vDistFromTop:
+        uUC     = upper_closure(u)
+        capMask = lte_specification_stack_left(uUC, v)
+        cap     = uUC[capMask.nonzero()]
+    else:
+        vLC     = lower_closure(v)
+        capMask = lte_specification_stack_right(u, vLC)
+        cap     = vLC[capMask.nonzero()]
+    return cap
+
+
 def preserves_meet_semilattice(msl_stack, op, checkBound=False, returnCounterexamples=False):
     '''
     Given 
