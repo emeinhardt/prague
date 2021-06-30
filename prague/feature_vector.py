@@ -872,7 +872,7 @@ def left_inv_priority_union(a, c, returnAsIntervalBounds=False):
     return lcGlb_proj
 
 
-def right_inv_priority_union(c,b):
+def right_inv_priority_union(c, b, returnAsIntervalBounds=False):
     '''
     Let + denote right priority union, where for some unknown pfv a
       a + b = c
@@ -887,9 +887,19 @@ def right_inv_priority_union(c,b):
       x / x = ↑0
     In other words, the only case where '(c,b)' can be informative about 'a'
     is when 'b' is 0, in which case a=c.
+    
+    By default this returns the stack of all solutions (if it exists). This set 
+    of solutions will always form a bounded meet semilattice - an upper closure 
+    of the specification semilattice, in fact. If returnAsIntervalBounds=True, 
+    then instead of returning the (potentially enormous) stack of solutions, the
+    glb bound of the solution upper closure is returned simply as 
+        min of solution upper closure
+
     '''
     if not lte_specification(b,c):
         return None
+    bIsUndefinedMask = b == 0
+    cMasked          = c * bIsUndefinedMask
     glb        = meet_specification(b,c)
     k          = diff(c,glb)
     offsetAt   = (c == 0) & (b == 0)
@@ -898,6 +908,12 @@ def right_inv_priority_union(c,b):
     up_kOffset = upper_closure(kOffset)
     undoOffset = (-1 * offset) * offsetAt
     result     =   up_kOffset  + undoOffset
+
+    assert np.array_equal(min_of(result),cMasked), f"min_of(result)={min_of(result)} vs. {cMasked}; c={c}, b={b}"
+    assert np.array_equal(k, cMasked), f"{k} vs. {cMasked}; c={c}, b={b}"
+    # assert np.array_equal(kOffset, cMasked), f"{kOffset} vs. {cMasked}; c={c}, b={b}"
+    if returnAsIntervalBounds:
+        return cMasked
     return result
 
 
