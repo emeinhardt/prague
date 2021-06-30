@@ -26,6 +26,14 @@ Development-oriented todo list.
  
 ## Core features
 
+ - Split up the overgrown feature_vector.py module into a few natural submodules drawn from, eg.
+   - feature dictionary <-> pfv 
+   - pfv creation
+   - feature-vectors-as-functions-ops
+   - (semi)lattice operations
+   - priority union/functions/operators
+   - property/structure/morphism checking
+   - maybe very high level functions related to identifying natural classes and processes
  - Refactor the following functions for stack-compatibility if possible:
    - `left_inv_priority_union`
    - `right_inv_priority_union`
