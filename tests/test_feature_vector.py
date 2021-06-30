@@ -422,6 +422,12 @@ def test_intersection_of_every_pair_of_UCs_is_the_UC_of_the_join():
 
 # properties of PRIORITY UNION
 
+def test_priority_union_is_associative():
+    for xWrapped, yWrapped, zWrapped in all3VecTriplesSet:
+        x, y, z = xWrapped.unwrap(), yWrapped.unwrap(), zWrapped.unwrap()
+        assert np.array_equal(fv.priority_union(fv.priority_union(x,y), z),
+                              fv.priority_union(x, fv.priority_union(y,z)))#, f"({x}+{y})+{z} = {fv.priority_union(x,y)} + {z} = fv.priority_union()"
+
 def test_priority_union_does_NOT_left_distribute_over_meet():
     left_dist_prunion_meet_cxs = fv.left_distribution_bin_bin(fv.priority_union, 
                                                               fv.meet_specification, 
@@ -581,6 +587,54 @@ def test_priority_union_left_is_a_lattice_HM_over_LCs():
 
 # properties of LEFT INVERSE PRIORITY UNION
 
+def test_left_inverse_is_associative():
+    counterexamples = set()
+    for xWrapped, yWrapped, zWrapped in all3VecTriplesSet:
+        x, y, z   = xWrapped.unwrap(), yWrapped.unwrap(), zWrapped.unwrap()
+        xy        = fv.left_inv_priority_union(x,y)
+        xyWrapped = None if xy is None else fv.stack_to_set(xy)
+        if xy is None:
+            xy_z  = None
+        else:
+            xy_zWrapped = set()
+            for xyPrimeWrapped in xyWrapped:
+                xyPrime = xyPrimeWrapped.unwrap()
+                if fv.left_inv_priority_union(xyPrime, z) is not None:
+                    xy_zWrapped.union(fv.stack_to_set(fv.left_inv_priority_union(xyPrime, z)))
+            xy_z = fv.hashableArrays_to_stack(xy_zWrapped) if len(xy_zWrapped) > 0 else None
+            # xy_z  = np.unique(fv.hashableArrays_to_stack(
+            #     grand_union([
+            #         fv.stack_to_set(fv.left_inv_priority_union(xyPrime, z))
+            #         for xyPrime in xyWrapped if fv.left_inv_priority_union(xyPrime, z) is not None])
+            # ), axis=0)
+        yz        = fv.left_inv_priority_union(y,z)
+        yzWrapped = None if yz is None else fv.stack_to_set(yz)
+        if yz is None:
+            x_yz  = None
+        else:
+            x_yzWrapped = set()
+            for yzPrimeWrapped in yzWrapped:
+                yzPrime = yzPrimeWrapped.unwrap()
+                if fv.left_inv_priority_union(x, yzPrime) is not None:
+                    x_yzWrapped.union(fv.stack_to_set(fv.left_inv_priority_union(x, yzPrime)))
+            x_yz = fv.hashableArrays_to_stack(x_yzWrapped) if len(x_yzWrapped) > 0 else None
+            # x_yz  = np.unique(fv.hashableArrays_to_stack(
+            #     grand_union([
+            #         fv.stack_to_set(fv.left_inv_priority_union(x, yzPrime))
+            #         for yzPrime in yzWrapped if fv.left_inv_priority_union(x, yzPrime) is not None])
+            # ), axis=0)
+        # x_yz = None if yz is None else fv.left_inv_priority_union(x, yz)
+        if xy_z is None and not x_yz is None:
+            counterexamples.add((xWrapped, yWrapped, zWrapped))
+        elif xy_z is not None and x_yz is None:
+            counterexamples.add((xWrapped, yWrapped, zWrapped))
+        elif xy_z is not None and x_yz is not None:
+            if not np.array_equal(xy_z, x_yz):
+                counterexamples.add((xWrapped, yWrapped, zWrapped))
+        else:
+            pass
+    assert len(counterexamples) == 0, f"{counterexamples}"
+
 def test_not_every_left_inverse_is_a_lower_closure():
     counterexamples = set()
     def left_inverse_is_a_lower_closure(i,a,b,c):
@@ -605,6 +659,54 @@ def test_every_defined_left_inverse_yields_a_bounded_lattice():
 
 
 # properties of RIGHT INVERSE PRIORITY UNION
+
+def test_right_inverse_is_associative():
+    counterexamples = set()
+    for xWrapped, yWrapped, zWrapped in all3VecTriplesSet:
+        x, y, z   = xWrapped.unwrap(), yWrapped.unwrap(), zWrapped.unwrap()
+        xy        = fv.right_inv_priority_union(x,y)
+        xyWrapped = None if xy is None else fv.stack_to_set(xy)
+        if xy is None:
+            xy_z  = None
+        else:
+            xy_zWrapped = set()
+            for xyPrimeWrapped in xyWrapped:
+                xyPrime = xyPrimeWrapped.unwrap()
+                if fv.right_inv_priority_union(xyPrime, z) is not None:
+                    xy_zWrapped.union(fv.stack_to_set(fv.right_inv_priority_union(xyPrime, z)))
+            xy_z = fv.hashableArrays_to_stack(xy_zWrapped) if len(xy_zWrapped) > 0 else None
+            # xy_z  = np.unique(fv.hashableArrays_to_stack(
+            #     grand_union([
+            #         fv.stack_to_set(fv.right_inv_priority_union(xyPrime, z))
+            #         for xyPrime in xyWrapped if fv.right_inv_priority_union(xyPrime, z) is not None])
+            # ), axis=0)
+        yz        = fv.right_inv_priority_union(y,z)
+        yzWrapped = None if yz is None else fv.stack_to_set(yz)
+        if yz is None:
+            x_yz  = None
+        else:
+            x_yzWrapped = set()
+            for yzPrimeWrapped in yzWrapped:
+                yzPrime = yzPrimeWrapped.unwrap()
+                if fv.right_inv_priority_union(x, yzPrime) is not None:
+                    x_yzWrapped.union(fv.stack_to_set(fv.right_inv_priority_union(x, yzPrime)))
+            x_yz = fv.hashableArrays_to_stack(x_yzWrapped) if len(x_yzWrapped) > 0 else None
+            # x_yz  = np.unique(fv.hashableArrays_to_stack(
+            #     grand_union([
+            #         fv.stack_to_set(fv.right_inv_priority_union(x, yzPrime))
+            #         for yzPrime in yzWrapped if fv.right_inv_priority_union(x, yzPrime) is not None])
+            # ), axis=0)
+        # x_yz = None if yz is None else fv.right_inv_priority_union(x, yz)
+        if xy_z is None and not x_yz is None:
+            counterexamples.add((xWrapped, yWrapped, zWrapped))
+        elif xy_z is not None and x_yz is None:
+            counterexamples.add((xWrapped, yWrapped, zWrapped))
+        elif xy_z is not None and x_yz is not None:
+            if not np.array_equal(xy_z, x_yz):
+                counterexamples.add((xWrapped, yWrapped, zWrapped))
+        else:
+            pass
+    assert len(counterexamples) == 0, f"{counterexamples}"
 
 def test_every_defined_right_inverse_yields_a_bounded_meet_semilattice():
     counterexamples = set()
@@ -653,7 +755,7 @@ def test_cap_of_every_interval_pair_is_empty_or_an_interval_with_natural_bounds(
         intervalLeft     = fv.hashableArrays_to_stack(intervalLeftWrapped)
         maxLeft, minLeft = fv.max_of(intervalLeft), fv.min_of(intervalLeft)
         for j,intervalRightWrapped in enumerate(all3VecIntervals):
-            intervalRight    = fv.hashableArrays_to_stack(intervalRightWrapped)
+            intervalRight      = fv.hashableArrays_to_stack(intervalRightWrapped)
             maxRight, minRight = fv.max_of(intervalRight), fv.min_of(intervalRight)
             
             capSet   = intervalLeftWrapped.intersection(intervalRightWrapped)
