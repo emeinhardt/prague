@@ -646,8 +646,8 @@ def priority_union(a,b):
     Booleans, this computes the right priority union of a and b:
       a + b = c
     where
-      c_i = a_i  if a_i ≠ 0
-            b_i  otherwise
+      c_i = b_i  if b_i ≠ 0
+            a_i  otherwise
     '''
     return spe_update(a,b)
 
@@ -1076,6 +1076,7 @@ def pseudolinear_decomposition(t,c):
     m                          = indices_of_c_that_are_in_m * c
     
 
+    lte = lte_specification
     assert np.array_equal(c, priority_union(m,b)) | (lte(c,t) & (m.sum() == 0 & b.sum() == 0)), f"{t}→{c} ≠ {t}→{m}→{b} (= {t}→{priority_union(m,b)})"
     
     return (m,b)
