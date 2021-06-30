@@ -15,7 +15,7 @@ from prague.feature_vector import cartesian_product, cartesian_product_stack
 from prague.feature_vector import combinations_np, n_choose_at_most_k_indices
 
 from prague.feature_vector import dual, normalize
-from prague.feature_vector import join_naive, join_specification_possible, join_specification as join
+from prague.feature_vector import join_naive, join_specification_possible as join_possible, join_specification as join
 from prague.feature_vector import lte_specification_dagwood as lte_dagwood
 from prague.feature_vector import lte_specification_stack_left as lte_stack_left
 from prague.feature_vector import lte_specification_stack_right as lte_stack_right
