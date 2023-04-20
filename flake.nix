@@ -29,10 +29,13 @@
     flake-utils.lib.eachSystem
     [
       flake-utils.lib.system.x86_64-linux
-      flake-utils.lib.system.aarch64-darwin
+
+      # See https://github.com/tweag/jupyenv/issues/388
+      # flake-utils.lib.system.aarch64-darwin
     ]
     (
       system: let
+        pkgs = nixpkgs.legacyPackages.${system};
         inherit (jupyenv.lib.${system}) mkJupyterlabNew;
         jupyterlab = mkJupyterlabNew ({...}: {
           nixpkgs = inputs.nixpkgs;
@@ -41,9 +44,19 @@
       in rec {
         packages = {inherit jupyterlab;};
         packages.default = jupyterlab;
+
         apps.default.program = "${jupyterlab}/bin/jupyter-notebook";
         # apps.default.program = "${jupyterlab}/bin/jupyter-lab";
         apps.default.type = "app";
+
+        devShell = pkgs.mkShell {
+          shellHook = ''
+            export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+          '';
+          buildInputs = with pkgs; [ poetry conda (python310.withPackages (ps: with ps; [ setuptools ] )) ];
+          # buildInputs = with pkgs; [ (python310.withPackages (ps: with ps; [ poetry ])) ];
+          # buildInputs = with pkgs; [ poetry python-language-server pyright ]
+        };
       }
     );
 }
