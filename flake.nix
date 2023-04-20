@@ -1,5 +1,5 @@
 {
-  description = "Your jupyenv project";
+  description = "A package for efficiently working with ternary or binary feature vectors common in phonology.";
 
   nixConfig.extra-substituters = [
     "https://tweag-jupyter.cachix.org"
@@ -11,7 +11,11 @@
   inputs.flake-compat.url = "github:edolstra/flake-compat";
   inputs.flake-compat.flake = false;
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+  # inputs.nixpkgs.url = "github:nixos/nixpkgs/archive/ec14e43941ac0b49121aa24c49c55eaf89d2f385.tar.gz";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
+  # inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
   inputs.jupyenv.url = "github:tweag/jupyenv";
 
   outputs = {
@@ -25,6 +29,7 @@
     flake-utils.lib.eachSystem
     [
       flake-utils.lib.system.x86_64-linux
+      flake-utils.lib.system.aarch64-darwin
     ]
     (
       system: let
@@ -36,7 +41,8 @@
       in rec {
         packages = {inherit jupyterlab;};
         packages.default = jupyterlab;
-        apps.default.program = "${jupyterlab}/bin/jupyter-lab";
+        apps.default.program = "${jupyterlab}/bin/jupyter-notebook";
+        # apps.default.program = "${jupyterlab}/bin/jupyter-lab";
         apps.default.type = "app";
       }
     );
