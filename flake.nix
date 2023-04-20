@@ -53,7 +53,7 @@
           shellHook = ''
             export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
           '';
-          buildInputs = with pkgs; [ poetry ];
+          buildInputs = with pkgs; [ poetry conda ];
           # buildInputs = with pkgs; [ (python310.withPackages (ps: with ps; [ poetry ])) ];
           # buildInputs = with pkgs; [ poetry python-language-server pyright ]
         };
