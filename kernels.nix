@@ -1,7 +1,7 @@
 {pkgs, self, ...}: {
-  kernel.python.kitchen-sink = {
+  kernel.python.kitchenSink = {
     enable = true;
-    # extraPackages = [  ]
+    # extraPackages = ps: with ps; [ funcy ];
     projectDir = ./kernels/python;
   };
 }
