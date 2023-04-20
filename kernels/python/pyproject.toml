@@ -50,6 +50,7 @@ cityhash = "^0.4.6"
 nbimporter = "^0.3.4"
 more-itertools = "^9.1.0"
 # sparse = "^0.14.0"
+setuptools = "^67.7.0"
 
 
 [build-system]
