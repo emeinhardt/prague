@@ -52,7 +52,7 @@
         # jupyter labextension install jlab-enhanced-cell-toolbar
         # jupyter labextension install aquirdturtle_collapsible_headings
         # jupyter labextension install jupyterlab_execute_time
-        # jupyter labextension install jupyterlab_limit_output
+        # jupyter labextension install jupyterlab_limit_output -- may not want this
         # jupyter labextension install jupyterlab-notifications
         # jupyter labextension install @ijmbarr/jupyterlab_spellchecker
         # jupyter labextension install jupyterlab-lsp
