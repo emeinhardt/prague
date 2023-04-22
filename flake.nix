@@ -43,7 +43,7 @@
         });
         pythonBinPath = pkgs.lib.removeSuffix "/python" (pkgs.lib.elemAt
           jupyterlab.passthru.kernels.python-kitchenSink-jupyter-kernel.passthru.kernelInstance.argv 0);
-        jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyterlab}/bin/jupyter '');
+        jupyterExec = (pkgs.writeScriptBin "jupyter" ''exec ${jupyterlab}/bin/jupyter'');
         # jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyenv}/bin/jupyter '');
         # jupyterlab-notify variableinspector
         jupyterExt = (pkgs.writeShellScript "jupyterlab-extensions-install" ''
