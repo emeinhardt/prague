@@ -12,12 +12,10 @@
   inputs.flake-compat.flake = false;
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  # TODO pin to specific commit
   # inputs.nixpkgs.url = "github:nixos/nixpkgs/archive/ec14e43941ac0b49121aa24c49c55eaf89d2f385.tar.gz";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
   # inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  # TODO pin to specific commit
   inputs.jupyenv.url = "github:tweag/jupyenv";
 
   outputs = {
@@ -45,16 +43,13 @@
         });
         pythonBinPath = pkgs.lib.removeSuffix "/python" (pkgs.lib.elemAt
           jupyterlab.passthru.kernels.python-kitchenSink-jupyter-kernel.passthru.kernelInstance.argv 0);
-          # jupyenv.lib.passthru.kernels.python-kitchenSink-jupyter-kernel.passthru.kernelInstance.argv 0);
         jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyenv}/bin/jupyter '');
       in rec {
         packages = {inherit jupyterlab;};
         packages.default = jupyterlab;
 
-        # foo = "bar!";
-
-        apps.default.program = "${jupyterlab}/bin/jupyter-notebook";
-        # apps.default.program = "${jupyterlab}/bin/jupyter-lab";
+        # apps.default.program = "${jupyterlab}/bin/jupyter-notebook";
+        apps.default.program = "${jupyterlab}/bin/jupyter-lab";
         apps.default.type = "app";
 
         devShells.default = pkgs.mkShell {
@@ -62,18 +57,8 @@
             export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
             export PATH=${pythonBinPath}:$PATH
           '';
-          # # TODO yank the python executable with bundled deps into the devShell
           buildInputs = with pkgs; [ poetry conda jupyterExec nodejs ];
         };
-        # devShell = pkgs.mkShell {
-        #   shellHook = ''
-        #     export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
-        #   '';
-        #   # # TODO yank the python executable with bundled deps into the devShell
-        #   buildInputs = with pkgs; [ poetry conda jupyterlab hello ];
-        # };
-          # buildInputs = with pkgs; [ poetry python-language-server pyright ]
-        # };
       }
     );
 }
