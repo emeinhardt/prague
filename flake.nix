@@ -43,7 +43,17 @@
         });
         pythonBinPath = pkgs.lib.removeSuffix "/python" (pkgs.lib.elemAt
           jupyterlab.passthru.kernels.python-kitchenSink-jupyter-kernel.passthru.kernelInstance.argv 0);
-        jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyenv}/bin/jupyter '');
+        jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyterlab}/bin/jupyter '');
+        # jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyenv}/bin/jupyter '');
+        # jupyterlab-notify variableinspector
+        jupyterExt = (pkgs.writeShellScript "jupyterlab-extensions-install" ''
+          jupyter labextension install jupyterlab-vim jlab-enhanced-cell-toolbar aquirdturtle_collapsible_headings jupyterlab_execute_time jupyterlab_limit_output jupyterlab-notifications
+          jupyter labextension install jupyterlab-search-replace jupyterlab-spellchecker
+          jupyter labextension install @konodyuk/theme-ayu-mirage
+          jupyter labextension install jupyterlab_commands
+          jupyter labextension install jupyterlab-lsp
+          jupyter labextension install jupyterlab-spreadsheet-editor
+        '');
       in rec {
         packages = {inherit jupyterlab;};
         packages.default = jupyterlab;
