@@ -9,3 +9,5 @@ __pycache__
 *.jupyter/*
 .envrc
 .direnv/*
+result
+result/*
