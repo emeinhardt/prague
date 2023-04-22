@@ -6,6 +6,7 @@ __pycache__
 .nfs*
 *.dat
 *.npz
+*.jupyter
 *.jupyter/*
 .envrc
 .direnv/*
