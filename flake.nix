@@ -41,8 +41,8 @@
           nixpkgs = inputs.nixpkgs;
           imports = [(import ./kernels.nix)];
         });
-        pythonBinPath = pkgs.lib.removeSuffix "/python" (pkgs.lib.elemAt
-          jupyterlab.passthru.kernels.python-kitchenSink-jupyter-kernel.passthru.kernelInstance.argv 0);
+        # pythonBinPath = pkgs.lib.removeSuffix "/python" (pkgs.lib.elemAt
+        #   jupyterlab.passthru.kernels.python-kitchenSink-jupyter-kernel.passthru.kernelInstance.argv 0);
         jupyterlabPath = "${jupyterlab}/bin";
         # jupyterExec = (pkgs.writeScriptBin "jupyter" ''exec ${jupyterlab}/bin/jupyter'');
         # jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyenv}/bin/jupyter '');
@@ -64,9 +64,10 @@
         apps.default.type = "app";
 
         devShells.default = pkgs.mkShell {
+          # export PATH=${pythonBinPath}:${jupyterlabPath}:$PATH
           shellHook = ''
             export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
-            export PATH=${pythonBinPath}:${jupyterlabPath}:$PATH
+            export PATH=${jupyterlabPath}:$PATH
             export JUPYTERLAB_PATH=${jupyterlabPath}
           '';
           buildInputs = with pkgs; [ poetry conda nodejs ];
