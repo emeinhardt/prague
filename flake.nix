@@ -63,7 +63,7 @@
             export PATH=${pythonBinPath}:$PATH
           '';
           # # TODO yank the python executable with bundled deps into the devShell
-          buildInputs = with pkgs; [ poetry conda jupyterExec hello ];
+          buildInputs = with pkgs; [ poetry conda jupyterExec nodejs ];
         };
         # devShell = pkgs.mkShell {
         #   shellHook = ''
