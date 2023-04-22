@@ -43,8 +43,8 @@
         });
         pythonBinPath = pkgs.lib.removeSuffix "/python" (pkgs.lib.elemAt
           jupyterlab.passthru.kernels.python-kitchenSink-jupyter-kernel.passthru.kernelInstance.argv 0);
-        jupyterlabPath = "${jupyterlab}";
-        jupyterExec = (pkgs.writeScriptBin "jupyter" ''exec ${jupyterlab}/bin/jupyter'');
+        jupyterlabPath = "${jupyterlab}/bin";
+        # jupyterExec = (pkgs.writeScriptBin "jupyter" ''exec ${jupyterlab}/bin/jupyter'');
         # jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyenv}/bin/jupyter '');
         # jupyterlab-notify variableinspector
         jupyterExt = (pkgs.writeShellScript "jupyterlab-extensions-install" ''
@@ -66,10 +66,10 @@
         devShells.default = pkgs.mkShell {
           shellHook = ''
             export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
-            export PATH=${pythonBinPath}:$PATH
+            export PATH=${pythonBinPath}:${jupyterlabPath}:$PATH
             export JUPYTERLAB_PATH=${jupyterlabPath}
           '';
-          buildInputs = with pkgs; [ poetry conda jupyterExec nodejs ];
+          buildInputs = with pkgs; [ poetry conda nodejs ];
         };
       }
     );
