@@ -47,13 +47,20 @@
         # jupyterExec = (pkgs.writeScriptBin "jupyter" ''exec ${jupyterlab}/bin/jupyter'');
         # jupyterExec = (pkgs.writeScriptBin "jupyter" '' exec ${jupyenv}/bin/jupyter '');
         # jupyterlab-notify variableinspector
+        # jupyter labextension install @axlair/jupyterlab-vim jlab-enhanced-cell-toolbar aquirdturtle_collapsible_headings jupyterlab_execute_time jupyterlab_limit_output jupyterlab-notifications
+        # jupyter labextension install @axlair/jupyterlab-vim
+        # jupyter labextension install jlab-enhanced-cell-toolbar
+        # jupyter labextension install aquirdturtle_collapsible_headings
+        # jupyter labextension install jupyterlab_execute_time
+        # jupyter labextension install jupyterlab_limit_output
+        # jupyter labextension install jupyterlab-notifications
+        # jupyter labextension install @ijmbarr/jupyterlab_spellchecker
+        # jupyter labextension install jupyterlab-lsp
+        # jupyter labextension install jupyterlab-spreadsheet-editor
         jupyterExt = (pkgs.writeShellScript "jupyterlab-extensions-install" ''
-          jupyter labextension install jupyterlab-vim jlab-enhanced-cell-toolbar aquirdturtle_collapsible_headings jupyterlab_execute_time jupyterlab_limit_output jupyterlab-notifications
-          jupyter labextension install jupyterlab-search-replace jupyterlab-spellchecker
-          jupyter labextension install @konodyuk/theme-ayu-mirage
+          jupyter labextension install jupyterlab-search-replace
+          jupyter labextension install @konodyuk/theme-ayu-mirage @arbennett/base16-nord @arbennett/base16-summerfruit-light @arbennett/base16-monokai
           jupyter labextension install jupyterlab_commands
-          jupyter labextension install jupyterlab-lsp
-          jupyter labextension install jupyterlab-spreadsheet-editor
         '');
       in rec {
         packages = {inherit jupyterlab;};
