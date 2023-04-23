@@ -60,8 +60,8 @@ more-itertools = "^9.1.0"
 # jupyterlab-spellchecker = "^0.7.3"
 # jupyterlab-lsp = "^4.0.1"
 # jupyterlab-spreadsheet-editor = "^0.6.1"
-jupyter-packaging = "^0.12.3"
-jupyterlab-vim = "^0.16.0"
+# jupyterlab-vim = "^0.16.0"
+jlab-enhanced-cell-toolbar = "^3.5.1"
 
 
 [build-system]
