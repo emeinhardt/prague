@@ -61,9 +61,9 @@ more-itertools = "^9.1.0"
 # jupyterlab-lsp = "^4.0.1"
 # jupyterlab-spreadsheet-editor = "^0.6.1"
 # jupyterlab-vim = "^0.16.0"
-jlab-enhanced-cell-toolbar = "^3.5.1"
+# jlab-enhanced-cell-toolbar = "^3.5.1"
 
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core", "jupyter_packaging"]
 build-backend = "poetry.core.masonry.api"
