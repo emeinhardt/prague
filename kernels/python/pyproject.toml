@@ -61,6 +61,7 @@ more-itertools = "^9.1.0"
 # jupyterlab-lsp = "^4.0.1"
 # jupyterlab-spreadsheet-editor = "^0.6.1"
 jupyter-packaging = "^0.12.3"
+jupyterlab-vim = "^0.16.0"
 
 
 [build-system]

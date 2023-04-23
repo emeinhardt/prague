@@ -113,6 +113,18 @@ wheel = "*"
 test = ["build", "coverage", "pre-commit", "pytest", "pytest-cov", "pytest-mock", "pytest-timeout"]
 
 [[package]]
+name = "jupyterlab-vim"
+version = "0.16.0"
+description = "Code cell vim bindings"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "jupyterlab_vim-0.16.0-py3-none-any.whl", hash = "sha256:4341fe1b83a069c1dafae085c94df382ac65456decc983363953b44cea307034"},
+    {file = "jupyterlab_vim-0.16.0.tar.gz", hash = "sha256:5bca352a6cb03b3730b7c649de7f0dfd43e7763089d8da56b04fab27233c006b"},
+]
+
+[[package]]
 name = "more-itertools"
 version = "9.1.0"
 description = "More routines for operating on iterables, beyond itertools"
@@ -503,4 +515,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "0554d90e367702ebbfc64e9526f4f23708ef850a90564f0e6ca90fc359c5790b"
+content-hash = "0508510ca6271251af562c5d4a58b1abe60b0648409b35d5a8284f3f73cc5d86"
