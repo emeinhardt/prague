@@ -4,7 +4,7 @@
     enable = true;
     # extraPackages = ps: with ps; [ funcy ];
     projectDir = ./kernels/python;
-    overrides = (import ./overrides.nix pkgs);
+    # overrides = (import ./overrides.nix pkgs);
     # overrides = pkgs.poetry2nix.overrides.withDefaults (import ./overrides.nix pkgs);
     # overrides = pkgs.poetry2nix.overrides.withDefaults (
     #   final: prev:
