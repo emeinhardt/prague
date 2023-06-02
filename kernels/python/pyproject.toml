@@ -1,5 +1,6 @@
 [tool.poetry]
-name = "prague"
+name = "kitchenSink"
+# name = "prague"
 version = "0.1.0"
 description = ""
 authors = ["Eric Meinhardt <ericmeinhardt@gmail.com>"]
