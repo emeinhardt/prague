@@ -87,7 +87,16 @@ Use of this package requires Python 3, plus installation (via your choice of e.g
 4. As long as the repository root directory is on the path/current directory, you should be able to `import prague` as a Python module --- see e.g. the demo notebooks in `prague/demo/`.
 5. If you navigate to the repository root directory (`.../prague/`) and (after setting up an appropriate environment) run `pytest`, you will know if everything has been setup correctly.
 
+**`nix`**
 
+Tentative support is available for the [nix](https://nixos.org/explore.html) package manager via [jupyenv](https://jupyenv.io/). `jupyenv` is undergoing significant refactoring and so currently only `x86_64` systems with linux are currently supported; the instructions below have been tested on NixOS 22.11 with nix 2.11.1.
+
+1. After cloning the repository, you may wish to enable `direnv` in your terminal via `echo "use flake" > .envrc && direnv allow`; if you are not using `direnv`, `nix develop` will create a local shell environment where various commands (`python`, `ipython`, `pytest`, `jupyter`, `jupyter-lab`, `jupyter-notebook`, ...) are available. Note that inside this shell environment, `python` etc. should be built with exactly the packages specified in the `poetry`-style `pyproject.toml` located in `prague/kernels/python`.
+    - It is possible that if you experience issues in the shell environment accessing a python executable with the project dependencies that the explanation may be interference from a globally installed python executable you may have; check `which python` may be helpful for diagnosing this issue.
+2. As a flake based build, `nix build` should build everything. 
+    - You do not need to run `nix shell` before running `nix build`.
+    - If there are no obvious error messages, you can confirm from within a `nix develop` shell that the environment has been configured correctly by running `pytest`; successful tests may take a few minutes (≈70s on an i7-10750H).
+3. Once the build has succeeded, you can either launch jupyterlab via `nix run` or (if you are in `nix develop` shell) via the usual commands (e.g. `jupyter lab`).
 
 
 ## Why `prague`?
